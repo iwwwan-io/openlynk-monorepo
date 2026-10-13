@@ -1,6 +1,7 @@
 import { getDb, schema, type DbClient } from "@openlynk/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies, toNextJsHandler } from "better-auth/next-js";
 
 export function createAuth(dbInstance: DbClient = getDb()) {
   return betterAuth({
@@ -17,6 +18,7 @@ export function createAuth(dbInstance: DbClient = getDb()) {
       enabled: true,
       requireEmailVerification: false,
     },
+    plugins: [nextCookies()],
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL:
       process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
@@ -25,4 +27,4 @@ export function createAuth(dbInstance: DbClient = getDb()) {
 
 export const auth = createAuth();
 export type Auth = typeof auth;
-export { toNextJsHandler } from "better-auth/next-js";
+export { nextCookies, toNextJsHandler };
