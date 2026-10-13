@@ -67,7 +67,11 @@ describe("Database schema", () => {
     expect(link.updatedAt).toBeDefined();
   });
 
-  it("exports createDbClient factory function", () => {
+  it("exports createDbClient factory function and accepts options", () => {
     expect(typeof createDbClient).toBe("function");
+    const testClient = createDbClient("postgresql://postgres:postgres@localhost:5432/test", {
+      prepare: false,
+    });
+    expect(testClient).toBeDefined();
   });
 });

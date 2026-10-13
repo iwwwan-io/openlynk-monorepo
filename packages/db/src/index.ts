@@ -6,8 +6,14 @@ export * from "../schema";
 export { schema };
 export { and, asc, desc, eq, sql } from "drizzle-orm";
 
-export function createDbClient(connectionString: string) {
-  const client = postgres(connectionString);
+export interface DbClientOptions {
+  prepare?: boolean;
+}
+
+export function createDbClient(connectionString: string, options: DbClientOptions = {}) {
+  const client = postgres(connectionString, {
+    prepare: options.prepare ?? false,
+  });
   return drizzle(client, { schema });
 }
 
@@ -16,8 +22,8 @@ export type DbClient = ReturnType<typeof createDbClient>;
 export function getDb(): DbClient {
   const connectionString =
     process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/openlynk";
-  return createDbClient(connectionString);
+  return createDbClient(connectionString, { prepare: false });
 }
 
 const connectionString = process.env.DATABASE_URL;
-export const db = connectionString ? createDbClient(connectionString) : null;
+export const db = connectionString ? createDbClient(connectionString, { prepare: false }) : null;
