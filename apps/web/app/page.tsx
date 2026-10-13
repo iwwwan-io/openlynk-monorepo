@@ -15,8 +15,12 @@ export default function HomePage() {
           seluruh Indonesia.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Button variant="primary">Mulai Sekarang</Button>
-          <Button variant="outline">Pelajari Dokumentasi</Button>
+          <a href="/register">
+            <Button variant="primary">Mulai Sekarang</Button>
+          </a>
+          <a href="/login">
+            <Button variant="outline">Masuk ke Akun</Button>
+          </a>
         </div>
       </div>
     </main>

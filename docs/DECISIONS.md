@@ -53,3 +53,16 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Efisiensi Disk & Cache:** pnpm menggunakan hard-links dan global content-addressable storage, menghemat ruang disk secara signifikan dan mempercepat instalasi dependency.
   - **Isolasi Ketat (No Phantom Dependencies):** Berbeda dengan npm atau Yarn v1 yang men-flatten dependency ke root, pnpm menggunakan symlink terstruktur sehingga paket hanya dapat mengakses dependensi yang secara eksplisit dideklarasikan di `package.json`.
   - **Monorepo Ringan:** Tanpa overhead tooling monorepo yang kompleks (seperti Turborepo/Nx berlebihan di tahap awal), pnpm workspaces sudah menyediakan kemampuan filtering (`pnpm -r`, `pnpm --filter`) yang cukup tangguh untuk skala MVP.
+
+---
+
+## 6. Autentikasi Email & Password serta Server-Side Session Guard
+
+- **Keputusan:**
+  - Autentikasi awal difokuskan pada kredensial dasar: email dan kata sandi (tanpa dependensi OAuth atau verifikasi email eksternal di tahap awal).
+  - Validasi data pengguna (email, panjang password, nama) dieksekusi secara ketat di sisi server melalui fungsi validasi murni TypeScript tanpa dependensi pustaka skema berlebih.
+  - Proteksi rute `/dashboard` diterapkan secara deklaratif pada React Server Components menggunakan `auth.api.getSession({ headers })` dan fungsi guard `isSessionAuthorized`.
+- **Rasional:**
+  - **Keamanan:** Memvalidasi kredensial dan sesi di server mencegah eksploitasi manipulasi state sisi klien.
+  - **Bebas Layout Shift / FOUC:** Verifikasi sesi di server memastikan pengunjung yang belum terotentikasi langsung diarahkan (`redirect("/login")`) pada tingkat HTTP response, tanpa merender data privat atau menampilkan kedipan UI kosong (_flash of unauthenticated content_).
+  - **Zero Secrets di Client:** Semua secret (`BETTER_AUTH_SECRET`, database credentials) tetap berada di lingkungan server dan dibaca secara eksklusif via `process.env`.
