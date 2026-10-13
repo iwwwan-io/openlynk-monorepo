@@ -48,6 +48,12 @@ describe("validateUsername", () => {
       "admin",
       "settings",
       "_next",
+      "404",
+      "500",
+      "favicon.ico",
+      "robots.txt",
+      "sitemap.xml",
+      "manifest.json",
     ]) {
       const res = validateUsername(reserved);
       expect(res.valid).toBe(false);
@@ -63,6 +69,11 @@ describe("validateUsername", () => {
     expect(RESERVED_USERNAMES.has("admin")).toBe(true);
     expect(RESERVED_USERNAMES.has("settings")).toBe(true);
     expect(RESERVED_USERNAMES.has("_next")).toBe(true);
+    expect(RESERVED_USERNAMES.has("404")).toBe(true);
+    expect(RESERVED_USERNAMES.has("500")).toBe(true);
+    expect(RESERVED_USERNAMES.has("favicon.ico")).toBe(true);
+    expect(RESERVED_USERNAMES.has("robots.txt")).toBe(true);
+    expect(RESERVED_USERNAMES.has("sitemap.xml")).toBe(true);
   });
 
   it("rejects non-string values", () => {
@@ -135,6 +146,11 @@ describe("validateAvatarUrl", () => {
   it("rejects unsupported protocols and invalid urls", () => {
     expect(validateAvatarUrl("ftp://example.com/avatar.png").valid).toBe(false);
     expect(validateAvatarUrl("javascript:alert(1)").valid).toBe(false);
+    expect(validateAvatarUrl("data:image/svg+xml,<svg></svg>").valid).toBe(false);
+    expect(validateAvatarUrl("vbscript:msgbox(1)").valid).toBe(false);
+    expect(validateAvatarUrl("file:///etc/passwd").valid).toBe(false);
+    expect(validateAvatarUrl("/images/avatar.jpg").valid).toBe(false);
+    expect(validateAvatarUrl("//example.com/pic.png").valid).toBe(false);
     expect(validateAvatarUrl("not-a-valid-url").valid).toBe(false);
   });
 });

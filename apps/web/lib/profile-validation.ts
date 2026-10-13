@@ -16,14 +16,39 @@ export const RESERVED_USERNAMES = new Set([
   "help",
   "terms",
   "privacy",
+  "security",
   "favicon",
+  "favicon.ico",
   "robots",
+  "robots.txt",
   "sitemap",
+  "sitemap.xml",
   "openlynk",
   "support",
   "explore",
   "status",
   "docs",
+  "404",
+  "500",
+  "502",
+  "503",
+  "error",
+  "manifest",
+  "manifest.json",
+  "sw.js",
+  "home",
+  "index",
+  "public",
+  "static",
+  "assets",
+  "null",
+  "undefined",
+  "me",
+  "app",
+  "signin",
+  "signup",
+  "logout",
+  "signout",
 ]);
 
 export interface ValidationResult<T = string> {
@@ -59,17 +84,18 @@ export function validateUsername(username: unknown): ValidationResult<string> {
     };
   }
 
+  const nameWithoutExt = trimmed.replace(/\.[a-z0-9]+$/i, "");
+  if (RESERVED_USERNAMES.has(trimmed) || RESERVED_USERNAMES.has(nameWithoutExt)) {
+    return {
+      valid: false,
+      error: `Username '${trimmed}' dicadangkan oleh sistem dan tidak dapat digunakan`,
+    };
+  }
+
   if (!/^[a-z0-9_]+$/.test(trimmed)) {
     return {
       valid: false,
       error: "Username hanya boleh memuat huruf kecil (a-z), angka (0-9), dan garis bawah (_)",
-    };
-  }
-
-  if (RESERVED_USERNAMES.has(trimmed)) {
-    return {
-      valid: false,
-      error: `Username '${trimmed}' dicadangkan oleh sistem dan tidak dapat digunakan`,
     };
   }
 
