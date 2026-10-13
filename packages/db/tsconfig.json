@@ -1,0 +1,7 @@
+{
+  "extends": "@openlynk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "bundler"
+  },
+  "include": ["src", "schema.ts", "drizzle.config.ts", "**/*.test.ts"]
+}

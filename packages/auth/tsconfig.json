@@ -1,0 +1,5 @@
+{
+  "extends": "@openlynk/config/tsconfig.base.json",
+  "compilerOptions": {},
+  "include": ["src"]
+}

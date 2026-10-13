@@ -1,0 +1,22 @@
+{
+  "name": "@openlynk/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "exit 0",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openlynk/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@openlynk/config": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}

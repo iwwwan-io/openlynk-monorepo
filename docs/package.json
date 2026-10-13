@@ -1,0 +1,11 @@
+{
+  "name": "@openlynk/docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "exit 0",
+    "lint": "exit 0",
+    "test": "exit 0",
+    "typecheck": "exit 0"
+  }
+}
