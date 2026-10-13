@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@openlynk/ui", "@openlynk/db", "@openlynk/auth"],
+  transpilePackages: ["@openlynk/ui"],
+  serverExternalPackages: ["postgres"],
 };
 
 export default nextConfig;
