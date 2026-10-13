@@ -37,6 +37,24 @@ async function getSessionUserProfile() {
   return { user: session.user, userProfile };
 }
 
+function handleActionError(err: unknown, defaultMessage: string): LinkActionState {
+  if (err instanceof Error && err.message === "UNAUTHORIZED") {
+    redirect("/login");
+  }
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "digest" in err &&
+    String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+  ) {
+    throw err;
+  }
+  return {
+    success: false,
+    error: err instanceof Error ? err.message : defaultMessage,
+  };
+}
+
 /**
  * Menambahkan tautan baru ke profil kreator.
  */
@@ -85,13 +103,7 @@ export async function createLinkAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Terjadi kesalahan saat menambahkan link",
-    };
+    return handleActionError(err, "Terjadi kesalahan saat menambahkan link");
   }
 }
 
@@ -153,13 +165,7 @@ export async function updateLinkAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Terjadi kesalahan saat memperbarui link",
-    };
+    return handleActionError(err, "Terjadi kesalahan saat memperbarui link");
   }
 }
 
@@ -201,13 +207,7 @@ export async function deleteLinkAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Terjadi kesalahan saat menghapus link",
-    };
+    return handleActionError(err, "Terjadi kesalahan saat menghapus link");
   }
 }
 
@@ -255,13 +255,7 @@ export async function toggleLinkActiveAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Terjadi kesalahan saat mengubah status link",
-    };
+    return handleActionError(err, "Terjadi kesalahan saat mengubah status link");
   }
 }
 
@@ -368,12 +362,6 @@ export async function reorderLinkAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
-    if (err instanceof Error && err.message === "UNAUTHORIZED") {
-      redirect("/login");
-    }
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Terjadi kesalahan saat memindahkan link",
-    };
+    return handleActionError(err, "Terjadi kesalahan saat memindahkan link");
   }
 }

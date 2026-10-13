@@ -18,6 +18,42 @@ export interface ProfileActionState {
   error?: string;
 }
 
+/**
+ * Mendeteksi error pelanggaran keunikan database PostgreSQL (kode 23505)
+ * untuk menangani kondisi balapan konkurensi (race condition) secara elegan.
+ */
+export function handleDatabaseUniqueError(err: unknown): string | null {
+  if (typeof err === "object" && err !== null) {
+    const errorObj = err as { code?: string; message?: string; constraint_name?: string };
+    const code = errorObj.code;
+    const msg = String(errorObj.message || "");
+    const constraint = String(errorObj.constraint_name || "");
+
+    if (
+      code === "23505" ||
+      msg.includes("unique constraint") ||
+      msg.includes("duplicate key value")
+    ) {
+      if (
+        constraint.includes("username") ||
+        msg.includes("profile_username_unique") ||
+        msg.includes("username")
+      ) {
+        return "Username sudah digunakan, silakan pilih username lain";
+      }
+      if (
+        constraint.includes("user_id") ||
+        msg.includes("profile_user_id_unique") ||
+        msg.includes("user_id")
+      ) {
+        return "Anda sudah memiliki profil";
+      }
+      return "Data yang dimasukkan sudah terdaftar";
+    }
+  }
+  return null;
+}
+
 async function getSessionUser() {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({
@@ -32,7 +68,7 @@ async function getSessionUser() {
 }
 
 /**
- * Onboarding/Pembuatan profil awal kreator.
+ * Onboarding/Pembuatan profil awal kreator dengan proteksi race condition.
  */
 export async function createProfileAction(
   prevState: ProfileActionState | FormData,
@@ -45,6 +81,7 @@ export async function createProfileAction(
     const rawUsername = data.get("username");
     const rawDisplayName = data.get("displayName");
     const rawBio = data.get("bio");
+    const rawAvatarUrl = data.get("avatarUrl");
 
     const usernameVal = validateUsername(rawUsername);
     if (!usernameVal.valid || !usernameVal.normalized) {
@@ -61,9 +98,14 @@ export async function createProfileAction(
       return { success: false, error: bioVal.error };
     }
 
+    const avatarVal = validateAvatarUrl(rawAvatarUrl);
+    if (!avatarVal.valid) {
+      return { success: false, error: avatarVal.error };
+    }
+
     const db = getDb();
 
-    // Pastikan pengguna belum memiliki profil
+    // Pengecekan awal profil akun
     const existing = await db
       .select({ id: profile.id })
       .from(profile)
@@ -74,7 +116,7 @@ export async function createProfileAction(
       return { success: false, error: "Profil untuk akun ini sudah ada" };
     }
 
-    // Pastikan username belum dipakai oleh pengguna lain
+    // Pengecekan awal keunikan username
     const usernameConflict = await db
       .select({ id: profile.id })
       .from(profile)
@@ -88,12 +130,22 @@ export async function createProfileAction(
       };
     }
 
-    await db.insert(profile).values({
-      userId: user.id,
-      username: usernameVal.normalized,
-      displayName: displayNameVal.normalized,
-      bio: bioVal.normalized,
-    });
+    // Eksekusi insert dengan penangkapan Postgres unique constraint race condition
+    try {
+      await db.insert(profile).values({
+        userId: user.id,
+        username: usernameVal.normalized,
+        displayName: displayNameVal.normalized,
+        bio: bioVal.normalized,
+        avatarUrl: avatarVal.normalized,
+      });
+    } catch (insertErr: unknown) {
+      const friendlyError = handleDatabaseUniqueError(insertErr);
+      if (friendlyError) {
+        return { success: false, error: friendlyError };
+      }
+      throw insertErr;
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/${usernameVal.normalized}`);
@@ -101,6 +153,14 @@ export async function createProfileAction(
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "UNAUTHORIZED") {
       redirect("/login");
+    }
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
     }
     return {
       success: false,
@@ -110,7 +170,7 @@ export async function createProfileAction(
 }
 
 /**
- * Pembaruan profil kreator (nama tampilan, bio, avatar).
+ * Pembaruan profil kreator (nama tampilan, bio, avatar) dengan proteksi race condition.
  */
 export async function updateProfileAction(
   prevState: ProfileActionState | FormData,
@@ -151,15 +211,23 @@ export async function updateProfileAction(
       return { success: false, error: "Profil belum dibuat" };
     }
 
-    await db
-      .update(profile)
-      .set({
-        displayName: displayNameVal.normalized,
-        bio: bioVal.normalized,
-        avatarUrl: avatarVal.normalized,
-        updatedAt: new Date(),
-      })
-      .where(eq(profile.id, userProfile.id));
+    try {
+      await db
+        .update(profile)
+        .set({
+          displayName: displayNameVal.normalized,
+          bio: bioVal.normalized,
+          avatarUrl: avatarVal.normalized,
+          updatedAt: new Date(),
+        })
+        .where(eq(profile.id, userProfile.id));
+    } catch (updateErr: unknown) {
+      const friendlyError = handleDatabaseUniqueError(updateErr);
+      if (friendlyError) {
+        return { success: false, error: friendlyError };
+      }
+      throw updateErr;
+    }
 
     revalidatePath("/dashboard");
     revalidatePath(`/${userProfile.username}`);
@@ -167,6 +235,14 @@ export async function updateProfileAction(
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "UNAUTHORIZED") {
       redirect("/login");
+    }
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "digest" in err &&
+      String((err as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
     }
     return {
       success: false,
