@@ -1,13 +1,15 @@
 import { getTableName } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, createDbClient, session, user, verification } from "./index";
+import { account, createDbClient, link, profile, session, user, verification } from "./index";
 
 describe("Database schema", () => {
-  it("defines standard Better Auth tables with correct table names", () => {
+  it("defines standard Better Auth and Openlynk tables with correct table names", () => {
     expect(getTableName(user)).toBe("user");
     expect(getTableName(session)).toBe("session");
     expect(getTableName(account)).toBe("account");
     expect(getTableName(verification)).toBe("verification");
+    expect(getTableName(profile)).toBe("profile");
+    expect(getTableName(link)).toBe("link");
   });
 
   it("verifies user table structure", () => {
@@ -41,6 +43,28 @@ describe("Database schema", () => {
     expect(verification.identifier).toBeDefined();
     expect(verification.value).toBeDefined();
     expect(verification.expiresAt).toBeDefined();
+  });
+
+  it("verifies profile table structure", () => {
+    expect(profile.id).toBeDefined();
+    expect(profile.userId).toBeDefined();
+    expect(profile.username).toBeDefined();
+    expect(profile.displayName).toBeDefined();
+    expect(profile.bio).toBeDefined();
+    expect(profile.avatarUrl).toBeDefined();
+    expect(profile.createdAt).toBeDefined();
+    expect(profile.updatedAt).toBeDefined();
+  });
+
+  it("verifies link table structure", () => {
+    expect(link.id).toBeDefined();
+    expect(link.profileId).toBeDefined();
+    expect(link.title).toBeDefined();
+    expect(link.url).toBeDefined();
+    expect(link.position).toBeDefined();
+    expect(link.isActive).toBeDefined();
+    expect(link.createdAt).toBeDefined();
+    expect(link.updatedAt).toBeDefined();
   });
 
   it("exports createDbClient factory function", () => {
