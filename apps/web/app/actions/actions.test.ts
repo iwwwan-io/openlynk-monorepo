@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { handleDatabaseUniqueError } from "./profile";
+import { handleDatabaseUniqueError } from "@/lib/db-errors";
 
 describe("handleDatabaseUniqueError (PostgreSQL Race Condition Handling)", () => {
   it("detects username unique constraint violation and returns friendly message", () => {
