@@ -4,6 +4,7 @@ import * as schema from "../schema";
 
 export * from "../schema";
 export { schema };
+export { and, asc, desc, eq, sql } from "drizzle-orm";
 
 export function createDbClient(connectionString: string) {
   const client = postgres(connectionString);
