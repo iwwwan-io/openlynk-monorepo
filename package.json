@@ -10,7 +10,9 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "vitest run",
     "format": "prettier --check .",
-    "format:fix": "prettier --write ."
+    "format:fix": "prettier --write .",
+    "db:generate": "pnpm --filter @openlynk/db db:generate",
+    "db:migrate": "pnpm --filter @openlynk/db db:migrate"
   },
   "devDependencies": {
     "eslint": "^9.20.0",

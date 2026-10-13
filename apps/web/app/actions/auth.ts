@@ -43,7 +43,20 @@ export async function registerAction(
       return { success: false, error: "Gagal membuat akun" };
     }
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Terjadi kesalahan saat pendaftaran";
+    let message = "Terjadi kesalahan saat pendaftaran";
+    if (err instanceof Error) {
+      if (
+        err.message.includes("Failed query") ||
+        err.message.includes("ECONNREFUSED") ||
+        err.message.includes("relation") ||
+        err.message.includes("connect")
+      ) {
+        message =
+          "Gagal terhubung ke database. Pastikan server PostgreSQL aktif dan migrasi skema telah dijalankan (pnpm db:migrate).";
+      } else {
+        message = err.message;
+      }
+    }
     return { success: false, error: message };
   }
 
@@ -85,8 +98,20 @@ export async function loginAction(
       return { success: false, error: "Email atau kata sandi tidak valid" };
     }
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Gagal masuk. Periksa kembali email dan kata sandi.";
+    let message = "Gagal masuk. Periksa kembali email dan kata sandi.";
+    if (err instanceof Error) {
+      if (
+        err.message.includes("Failed query") ||
+        err.message.includes("ECONNREFUSED") ||
+        err.message.includes("relation") ||
+        err.message.includes("connect")
+      ) {
+        message =
+          "Gagal terhubung ke database. Pastikan server PostgreSQL aktif dan migrasi skema telah dijalankan (pnpm db:migrate).";
+      } else {
+        message = err.message;
+      }
+    }
     return { success: false, error: message };
   }
 
