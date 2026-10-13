@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "build": "exit 0",
@@ -13,7 +14,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@openlynk/db": "workspace:*"
+    "@openlynk/db": "workspace:*",
+    "better-auth": "^1.7.7",
+    "drizzle-orm": "^0.45.4"
   },
   "devDependencies": {
     "@openlynk/config": "workspace:*",

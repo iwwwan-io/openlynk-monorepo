@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as schema from "../schema";
 
 export * from "../schema";
+export { schema };
 
 export function createDbClient(connectionString: string) {
   const client = postgres(connectionString);
@@ -10,6 +11,12 @@ export function createDbClient(connectionString: string) {
 }
 
 export type DbClient = ReturnType<typeof createDbClient>;
+
+export function getDb(): DbClient {
+  const connectionString =
+    process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/openlynk";
+  return createDbClient(connectionString);
+}
 
 const connectionString = process.env.DATABASE_URL;
 export const db = connectionString ? createDbClient(connectionString) : null;
