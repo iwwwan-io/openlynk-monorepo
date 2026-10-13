@@ -47,6 +47,7 @@ export async function generateMetadata(props: PublicProfilePageProps): Promise<M
       title,
       description,
       type: "profile",
+      url: `/${userProfile.username}`,
       images: userProfile.avatarUrl ? [userProfile.avatarUrl] : undefined,
     },
     twitter: {
