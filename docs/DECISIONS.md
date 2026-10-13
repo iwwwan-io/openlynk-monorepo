@@ -81,3 +81,18 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Keamanan Pengunjung Link-in-Bio:** Platform agregator tautan rentan disalahgunakan dengan skema URI berbahaya (`javascript:...`). Sanitasi di server dan atribut `noopener noreferrer` menutup celah `window.opener` serta serangan phishing dan XSS.
   - **Integritas Routing Aplikasi:** Pemblokiran _reserved keywords_ mencegah benturan rute Next.js dinamis `/[username]` dengan rute sistem aplikasi.
   - **Efisiensi Pengurutan:** Penggunaan integer `position` terindeks memungkinkan komputasi urutan tautan (naik/turun) yang deterministik, cepat, dan mudah di-query di sisi server.
+
+---
+
+## 8. Strategi Koneksi Database (Pooled vs Direct DDL), Route Metadata, dan Kesiapan Deploy Vercel
+
+- **Keputusan:**
+  - Memisahkan konfigurasi koneksi database runtime (`DATABASE_URL`, connection pooler mode transaction) dengan koneksi eksekusi migrasi DDL (`DATABASE_URL_DIRECT`, session mode langsung / non-pooled).
+  - Mengonfigurasi client driver `postgres-js` dengan `prepare: false` secara default untuk seluruh query aplikasi.
+  - Mengimplementasikan Next.js Route Metadata untuk `robots.txt` (`apps/web/app/robots.ts`) dan `sitemap.xml` dinamis (`apps/web/app/sitemap.ts`) yang mengambil seluruh data profil kreator publik langsung dari database.
+  - Menetapkan `metadataBase` pada Root Layout (`apps/web/app/layout.tsx`) yang bersumber dari URL aplikasi tunggal (`NEXT_PUBLIC_APP_URL` / `BETTER_AUTH_URL`) agar seluruh tautan canonical dan OpenGraph (OG tags) ter-resolve secara absolut.
+  - Memastikan seluruh konfigurasi monorepo siap deploy ke Vercel dengan Root Directory `apps/web`, isolasi environment keys, dan dokumentasi migrasi skema.
+- **Rasional:**
+  - **Kompatibilitas Connection Pooler Serverless:** Arsitektur serverless (seperti Vercel) membuka banyak koneksi singkat ke Postgres via transaction pooler (Layerbase pooler, Supabase Supavisor, PgBouncer). Transaction pooler tidak mempertahankan state _prepared statements_ antar-koneksi. Mengaktifkan `prepare: false` mencegah error fatal `prepared statement does not exist` atau duplikasi nama statement.
+  - **Keandalan Migrasi Skema DDL:** Perintah migrasi skema Drizzle (`drizzle-kit migrate`) menjalankan DDL locks dan transaksi skema yang tidak didukung atau rentan timeout pada pooler transaksi. Mengarahkan migrasi ke `DATABASE_URL_DIRECT` (port 5432 session mode) menjamin migrasi skema selalu atomik dan berhasil.
+  - **SEO & Indexing Terstandarisasi:** Route Metadata Next.js menghasilkan `robots.txt` dan `sitemap.xml` yang valid secara native tanpa file statis manual. Sitemap terbarui secara real-time berdasarkan kreator terdaftar di database, memblokir pengindeksan rute privat (`/dashboard`, `/api`), dan didukung absolute OpenGraph URL berkat `metadataBase`.

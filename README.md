@@ -31,36 +31,106 @@ openlynk/
 └── LICENSE             # GNU Affero General Public License v3.0
 ```
 
-## Memulai Pengembangan
+## Memulai Pengembangan Lokal
 
 ### Prasyarat
 
 - Node.js >= 20
 - pnpm >= 9
-- PostgreSQL >= 15
+- PostgreSQL >= 15 (lokal atau cloud provider seperti Layerbase, Supabase, Neon)
 
-### Instalasi & Skrip
+### Konfigurasi Environment Wajib
+
+Salin template environment ke `.env.local`:
 
 ```bash
-# Salin konfigurasi environment
 cp .env.example .env.local
+```
 
-# Instalasi dependency
+Buka `.env.local` dan pastikan variabel-variabel wajib berikut terisi:
+
+- `DATABASE_URL`: Connection string PostgreSQL untuk aplikasi runtime (mode pooled). Runtime `postgres-js` otomatis memakai `prepare: false` agar aman dengan transaction pooler (PgBouncer/Supavisor).
+- `DATABASE_URL_DIRECT`: Connection string PostgreSQL langsung (mode direct / non-pooled, port 5432). Digunakan khusus untuk eksekusi migrasi DDL skema Drizzle (`pnpm db:migrate`).
+- `BETTER_AUTH_SECRET`: Kunci enkripsi sesi rahasia (minimal 32 karakter).
+- `BETTER_AUTH_URL`: URL aplikasi autentikasi (`http://localhost:3000` untuk lokal).
+- `NEXT_PUBLIC_APP_URL`: URL basis aplikasi untuk `metadataBase`, `robots.txt`, dan `sitemap.xml` (`http://localhost:3000` untuk lokal).
+
+### Instalasi & Menjalankan Aplikasi
+
+```bash
+# 1. Instalasi seluruh dependencies monorepo
 pnpm install
 
-# Menjalankan typecheck
+# 2. Jalankan migrasi skema database Drizzle
+pnpm db:migrate
+
+# 3. Jalankan development server
+pnpm dev
+```
+
+Buka [http://localhost:3000](http://localhost:3000) pada browser Anda.
+
+### Verifikasi Kualitas Kode
+
+Sebelum commit kode, pastikan seluruh quality gate hijau:
+
+```bash
+# Type checking (TypeScript Strict)
 pnpm typecheck
 
-# Menjalankan linter
+# Linting kode
 pnpm lint
 
-# Menjalankan unit tests
+# Unit & integration testing (Vitest)
 pnpm test
 
-# Build seluruh workspace
+# Build verifikasi seluruh workspace
 pnpm build
 ```
 
+---
+
+## Panduan Deployment ke Vercel
+
+Aplikasi web Openlynk dirancang dalam struktur pnpm monorepo dan siap di-deploy ke Vercel.
+
+### 1. Konfigurasi Proyek di Vercel
+
+Saat mengimpor repositori ke Vercel Dashboard:
+
+- **Framework Preset:** Next.js
+- **Root Directory:** Pilih dan set ke `apps/web` (centang _"Include source files outside of the Root Directory in the Build Command"_ agar paket `@openlynk/*` tetap terakses).
+
+### 2. Environment Variables di Vercel
+
+Tambahkan seluruh variabel environment berikut pada menu **Settings > Environment Variables**:
+
+| Variable              | Keterangan & Contoh Nilai                                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`        | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
+| `DATABASE_URL_DIRECT` | Connection string PostgreSQL direct (port 5432 non-pooled) untuk DDL migration.                                        |
+| `BETTER_AUTH_SECRET`  | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
+| `BETTER_AUTH_URL`     | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
+| `NEXT_PUBLIC_APP_URL` | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
+| `NODE_ENV`            | `production`                                                                                                           |
+
+### 3. Migrasi Database Saat Deploy
+
+Karena `drizzle-kit migrate` membutuhkan koneksi langsung (DDL transactions), pilih salah satu strategi migrasi berikut:
+
+- **Opsi A (Otomatis saat Build Vercel):**
+  Pada Vercel **Settings > General > Build Command**, ubah build command menjadi:
+  ```bash
+  pnpm --filter @openlynk/db db:migrate && next build
+  ```
+- **Opsi B (Sebelum Deploy / CI Pipeline):**
+  Jalankan perintah migrasi langsung dari terminal lokal atau GitHub Actions menggunakan kredensial produksi sebelum mempromosikan commit baru ke production:
+  ```bash
+  DATABASE_URL_DIRECT="postgresql://..." pnpm db:migrate
+  ```
+
+---
+
 ## Dokumentasi Arsitektur
 
-Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, dan pnpm workspaces.
+Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, pnpm workspaces, penanganan connection pooler (`prepare: false`), serta Route Metadata (`robots.txt` dan `sitemap.xml`).
