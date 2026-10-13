@@ -66,3 +66,18 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Keamanan:** Memvalidasi kredensial dan sesi di server mencegah eksploitasi manipulasi state sisi klien.
   - **Bebas Layout Shift / FOUC:** Verifikasi sesi di server memastikan pengunjung yang belum terotentikasi langsung diarahkan (`redirect("/login")`) pada tingkat HTTP response, tanpa merender data privat atau menampilkan kedipan UI kosong (_flash of unauthenticated content_).
   - **Zero Secrets di Client:** Semua secret (`BETTER_AUTH_SECRET`, database credentials) tetap berada di lingkungan server dan dibaca secara eksklusif via `process.env`.
+
+---
+
+## 7. Model Data Profil Kreator, Pengurutan Link, dan Sanitasi URL
+
+- **Keputusan:**
+  - Memisahkan tabel `profile` (username unik huruf kecil, display name, bio opsional maks 160 karakter, avatar URL) dan tabel `link` (posisi urutan integer, status aktif, FK cascade ke profile).
+  - Indeks komposit `(profile_id, position)` diterapkan pada tabel `link` untuk menjamin efisiensi tinggi saat merender halaman publik link-in-bio dan query dashboard.
+  - Validasi username membatasi hanya huruf kecil, angka, dan garis bawah (`^[a-z0-9_]{3,30}$`), serta memblokir kata kunci rute sistem yang dicadangkan (_reserved keywords_: `login`, `register`, `dashboard`, `api`, `admin`, `settings`, `_next`, dll).
+  - Validasi URL tautan secara ketat hanya mengizinkan protokol `http://` dan `https://`, menolak seluruh protokol berbahaya seperti `javascript:`, `data:`, `file:`, dan `vbscript:` untuk mencegah serangan XSS (_Cross-Site Scripting_).
+  - Seluruh tautan eksternal pada halaman publik dibuka dengan atribut keamanan `target="_blank"` dan `rel="noopener noreferrer"`.
+- **Rasional:**
+  - **Keamanan Pengunjung Link-in-Bio:** Platform agregator tautan rentan disalahgunakan dengan skema URI berbahaya (`javascript:...`). Sanitasi di server dan atribut `noopener noreferrer` menutup celah `window.opener` serta serangan phishing dan XSS.
+  - **Integritas Routing Aplikasi:** Pemblokiran _reserved keywords_ mencegah benturan rute Next.js dinamis `/[username]` dengan rute sistem aplikasi.
+  - **Efisiensi Pengurutan:** Penggunaan integer `position` terindeks memungkinkan komputasi urutan tautan (naik/turun) yang deterministik, cepat, dan mudah di-query di sisi server.
