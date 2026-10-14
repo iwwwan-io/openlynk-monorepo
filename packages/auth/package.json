@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "exit 0",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

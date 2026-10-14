@@ -42,3 +42,6 @@ coverage/
 
 # Drizzle
 .drizzle/
+
+# Turborepo
+.turbo/

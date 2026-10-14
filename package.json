@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0",
+  "packageManager": "pnpm@12.11.2",
   "scripts": {
-    "dev": "pnpm --filter @openlynk/web dev",
-    "build": "pnpm -r run build",
-    "lint": "eslint .",
-    "typecheck": "pnpm -r run typecheck",
-    "test": "vitest run",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "db:generate": "pnpm --filter @openlynk/db db:generate",
@@ -17,6 +18,7 @@
   "devDependencies": {
     "eslint": "^9.20.0",
     "prettier": "^3.5.0",
+    "turbo": "^2.11.7",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0",
     "vitest": "^3.0.5"
