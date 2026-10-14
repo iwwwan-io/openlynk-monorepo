@@ -42,13 +42,24 @@ openlynk/
 
 ### Konfigurasi Environment Wajib
 
-Salin template environment ke `.env.local`:
+Salin template environment ke lokasi yang dibaca oleh aplikasi Next.js (`apps/web/.env.local`) dan root monorepo (`.env.local` untuk Drizzle migrations):
 
 ```bash
+# 1. Salin ke root monorepo
 cp .env.example .env.local
+
+# 2. Salin atau buat symlink ke aplikasi web
+cp .env.example apps/web/.env.local
+# ATAU menggunakan symlink:
+# ln -s ../../.env.local apps/web/.env.local
 ```
 
-Buka `.env.local` dan pastikan variabel-variabel wajib berikut terisi:
+> **Akurasi Pembacaan Environment:**
+>
+> - **Aplikasi Web (`apps/web`):** Next.js membaca environment variables secara native dari `apps/web/.env.local` (atau `apps/web/.env`).
+> - **Database Migrations (`packages/db`):** Drizzle Kit (`drizzle.config.ts`) membaca konfigurasi dari root `.env.local`, `packages/db/.env.local`, atau `apps/web/.env.local`.
+
+Buka file `.env.local` dan pastikan variabel-variabel wajib berikut terisi:
 
 - `DATABASE_URL`: Connection string PostgreSQL untuk aplikasi runtime (mode pooled). Runtime `postgres-js` otomatis memakai `prepare: false` agar aman dengan transaction pooler (PgBouncer/Supavisor).
 - `DATABASE_URL_DIRECT`: Connection string PostgreSQL langsung (mode direct / non-pooled, port 5432). Digunakan khusus untuk eksekusi migrasi DDL skema Drizzle (`pnpm db:migrate`).
@@ -109,26 +120,18 @@ Tambahkan seluruh variabel environment berikut pada menu **Settings > Environmen
 | Variable              | Keterangan & Contoh Nilai                                                                                              |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`        | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
-| `DATABASE_URL_DIRECT` | Connection string PostgreSQL direct (port 5432 non-pooled) untuk DDL migration.                                        |
+| `DATABASE_URL_DIRECT` | (Opsional) Connection string PostgreSQL direct (port 5432 non-pooled) jika diperlukan untuk DDL.                       |
 | `BETTER_AUTH_SECRET`  | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
 | `BETTER_AUTH_URL`     | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
 | `NEXT_PUBLIC_APP_URL` | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
-| `NODE_ENV`            | `production`                                                                                                           |
 
-### 3. Migrasi Database Saat Deploy
+### 3. Migrasi Database Sebelum Deploy
 
-Karena `drizzle-kit migrate` membutuhkan koneksi langsung (DDL transactions), pilih salah satu strategi migrasi berikut:
+Karena `drizzle-kit migrate` menjalankan perintah DDL yang memerlukan koneksi langsung (non-pooled) dan tidak boleh dijalankan di dalam build command Vercel, jalankan migrasi secara manual dari terminal lokal atau GitHub Actions menggunakan kredensial produksi sebelum melakukan deploy:
 
-- **Opsi A (Otomatis saat Build Vercel):**
-  Pada Vercel **Settings > General > Build Command**, ubah build command menjadi:
-  ```bash
-  pnpm --filter @openlynk/db db:migrate && next build
-  ```
-- **Opsi B (Sebelum Deploy / CI Pipeline):**
-  Jalankan perintah migrasi langsung dari terminal lokal atau GitHub Actions menggunakan kredensial produksi sebelum mempromosikan commit baru ke production:
-  ```bash
-  DATABASE_URL_DIRECT="postgresql://..." pnpm db:migrate
-  ```
+```bash
+DATABASE_URL_DIRECT="postgresql://..." pnpm db:migrate
+```
 
 ---
 

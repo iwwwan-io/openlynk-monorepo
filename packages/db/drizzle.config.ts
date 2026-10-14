@@ -12,8 +12,12 @@ function getDatabaseUrl(): string {
   const candidatePaths = [
     resolve(process.cwd(), ".env.local"),
     resolve(process.cwd(), ".env"),
+    resolve(process.cwd(), "apps/web/.env.local"),
+    resolve(process.cwd(), "apps/web/.env"),
     resolve(process.cwd(), "../../.env.local"),
     resolve(process.cwd(), "../../.env"),
+    resolve(process.cwd(), "../../apps/web/.env.local"),
+    resolve(process.cwd(), "../../apps/web/.env"),
   ];
   for (const envPath of candidatePaths) {
     if (existsSync(envPath)) {

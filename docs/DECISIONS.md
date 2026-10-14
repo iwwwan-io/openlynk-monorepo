@@ -46,13 +46,13 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
 
 ---
 
-## 5. Monorepo Tooling: pnpm Workspaces
+## 5. Monorepo Tooling: pnpm Workspaces & Turborepo
 
-- **Keputusan:** Menggunakan pnpm workspaces untuk manajemen monorepo.
+- **Keputusan:** Menggunakan pnpm workspaces untuk manajemen dependensi monorepo dikombinasikan dengan Turborepo untuk orkestrasi task dan caching.
 - **Rasional:**
   - **Efisiensi Disk & Cache:** pnpm menggunakan hard-links dan global content-addressable storage, menghemat ruang disk secara signifikan dan mempercepat instalasi dependency.
   - **Isolasi Ketat (No Phantom Dependencies):** Berbeda dengan npm atau Yarn v1 yang men-flatten dependency ke root, pnpm menggunakan symlink terstruktur sehingga paket hanya dapat mengakses dependensi yang secara eksplisit dideklarasikan di `package.json`.
-  - **Monorepo Ringan:** Tanpa overhead tooling monorepo yang kompleks (seperti Turborepo/Nx berlebihan di tahap awal), pnpm workspaces sudah menyediakan kemampuan filtering (`pnpm -r`, `pnpm --filter`) yang cukup tangguh untuk skala MVP.
+  - **Kombinasi Sempurna dengan Turborepo:** pnpm workspaces menangani isolasi paket dan linking internal (`workspace:*`), sedangkan Turborepo mengorkestrasikan eksekusi task (`build`, `lint`, `typecheck`, `test`, `dev`) dengan dependency graph topologis.
 
 ---
 
@@ -99,13 +99,15 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
 
 ---
 
-## 9. Adopsi Turborepo untuk Pipeline Orchestration dan Computation Caching
+## 9. Adopsi dan Retensi Turborepo untuk Pipeline Orchestration dan Computation Caching
 
 - **Keputusan:**
-  - Mengintegrasikan Turborepo (`turbo`) di atas pnpm Workspaces dengan konfigurasi terpusat pada `turbo.json`.
+  - Mempertahankan Turborepo (`turbo`) di atas pnpm Workspaces dengan konfigurasi terpusat pada `turbo.json`.
   - Mengorkestrasikan tugas-tugas monorepo (`build`, `typecheck`, `lint`, `test`, `dev`) melalui pipeline Turborepo.
-  - Memanfaatkan _local computation caching_ dan integrasi native _Vercel Remote Caching_ untuk mencegah kompilasi ulang pada paket yang tidak mengalami perubahan.
+  - Mendaftarkan environment variables kunci yang mempengaruhi hasil kompilasi (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`) pada `globalEnv` dan task `env` pada `turbo.json`.
+  - Mengonfigurasi task `dev` dengan `cache: false` dan `persistent: true` untuk menjamin proses development server tetap interaktif.
 - **Rasional:**
-  - **Akselerasi Build & Typecheck Lokal:** Pada lingkungan komputasi terbatas seperti Termux (Linux ARM64), kompilasi Next.js 16 dan typechecking multi-paket memakan waktu dan daya baterai yang signifikan. Caching hash Turborepo memangkas waktu eksekusi task yang tidak berubah dari menit ke milidetik (`FULL TURBO`).
-  - **Parallelism & Dependency Awareness:** Turborepo secara topologis menyusun dependency graph (`^build`), mengeksekusi paket-paket independen secara paralel, dan hanya membangun ulang paket yang terpengaruh perubahan kode.
-  - **Kompatibilitas Penuh dengan pnpm:** Tetap menggunakan pnpm workspaces untuk isolasi dependensi dan symlink paket internal yang ketat, dikombinasikan dengan Turborepo murni untuk penjadwalan dan caching task.
+  - **Akselerasi Siklus Development lewat Cache & Orkestrasi:** Turborepo dipertahankan secara permanen dalam arsitektur repositori untuk mempercepat siklus development harian dan alur CI/CD melalui komputasi cache (baik lokal maupun Vercel Remote Caching) serta orkestrasi task multi-paket yang terstruktur. Ketika input kode dan konfigurasi tidak berubah, hasil eksekusi langsung diambil dari cache (`FULL TURBO`) tanpa menjalankan ulang kompilasi.
+  - **Efisiensi Lingkungan Terbatas (Termux / Linux ARM64):** Kompilasi Next.js 16 dan typechecking multi-paket memakan daya CPU dan baterai yang besar di lingkungan perangkat terbatas. Cache hash Turborepo mengeliminasi kompilasi berulang yang tidak perlu.
+  - **Parallelism & Dependency Awareness:** Turborepo menyusun dependency graph secara topologis (`^build`), mengeksekusi task paket-paket yang saling bebas secara paralel, dan hanya menjalankan ulang paket yang benar-benar terdampak perubahan kode.
+  - **Isolasi Task Interaktif (`dev`):** Mengatur `cache: false` dan `persistent: true` pada task `dev` memastikan proses server Next.js tidak dicache dan berjalan terus-menerus mendengarkan perubahan file (_hot module replacement_).

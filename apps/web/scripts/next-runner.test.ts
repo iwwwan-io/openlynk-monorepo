@@ -28,12 +28,7 @@ describe("resolveNextArgs", () => {
   });
 
   it("does not add --webpack on dev command when running on Vercel preview", () => {
-    const result = resolveNextArgs(
-      "dev",
-      [],
-      { VERCEL: "1", NODE_ENV: "development" },
-      "linux"
-    );
+    const result = resolveNextArgs("dev", [], { VERCEL: "1", NODE_ENV: "development" }, "linux");
     expect(result.args).toEqual(["dev"]);
   });
 
