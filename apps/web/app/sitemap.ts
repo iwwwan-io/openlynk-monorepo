@@ -3,7 +3,6 @@ import type { MetadataRoute } from "next";
 import { getBaseUrl } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
@@ -24,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
   } catch (error) {
-    console.error("Failed to query profiles for sitemap:", error);
+    console.error("[Sitemap] Gagal mengambil profil kreator dari database:", error);
     return [];
   }
 }

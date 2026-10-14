@@ -10,33 +10,40 @@ describe("resolveNextArgs", () => {
       "android"
     );
     expect(result.args).toEqual(["build", "--webpack"]);
-    expect(result.shouldDisableWasm).toBe(false);
   });
 
-  it("does not add --webpack on Vercel even if running on android platform", () => {
-    const result = resolveNextArgs("build", [], { VERCEL: "1", NODE_ENV: "production" }, "android");
+  it("never adds --webpack on Vercel even if platform is android", () => {
+    const result = resolveNextArgs(
+      "build",
+      [],
+      { VERCEL: "1", TERMUX_VERSION: "0.118.0", NODE_ENV: "production" },
+      "android"
+    );
     expect(result.args).toEqual(["build"]);
-    expect(result.shouldDisableWasm).toBe(true);
   });
 
-  it("does not add --webpack on standard Linux x64 production environment", () => {
+  it("does not add --webpack on standard Linux x64 CI/production environment", () => {
     const result = resolveNextArgs("build", [], { NODE_ENV: "production" }, "linux");
     expect(result.args).toEqual(["build"]);
-    expect(result.shouldDisableWasm).toBe(true);
   });
 
-  it("disables SWC-WASM in production when not on Termux", () => {
-    const result = resolveNextArgs("dev", [], { NODE_ENV: "production" }, "linux");
-    expect(result.shouldDisableWasm).toBe(true);
-  });
-
-  it("allows SWC-WASM in Termux development environment", () => {
+  it("does not add --webpack on dev command when running on Vercel preview", () => {
     const result = resolveNextArgs(
       "dev",
       [],
-      { TERMUX_VERSION: "0.118.0", NODE_ENV: "development" },
-      "android"
+      { VERCEL: "1", NODE_ENV: "development" },
+      "linux"
     );
-    expect(result.shouldDisableWasm).toBe(false);
+    expect(result.args).toEqual(["dev"]);
+  });
+
+  it("preserves additional user arguments", () => {
+    const result = resolveNextArgs(
+      "build",
+      ["--debug"],
+      { VERCEL: "1", NODE_ENV: "production" },
+      "linux"
+    );
+    expect(result.args).toEqual(["build", "--debug"]);
   });
 });

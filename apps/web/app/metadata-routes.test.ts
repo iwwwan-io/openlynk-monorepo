@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import robots from "./robots";
-import sitemap, { dynamic, revalidate } from "./sitemap";
+import sitemap, { dynamic } from "./sitemap";
 
 let shouldFailDb = false;
 
@@ -39,9 +39,8 @@ describe("robots.ts route metadata", () => {
 });
 
 describe("sitemap.ts route metadata", () => {
-  it("exports dynamic configuration for on-demand generation and revalidation", () => {
+  it("exports dynamic configuration for on-demand generation", () => {
     expect(dynamic).toBe("force-dynamic");
-    expect(revalidate).toBe(3600);
   });
 
   it("populates sitemap URLs exclusively from creator profiles in DB", async () => {
@@ -53,10 +52,16 @@ describe("sitemap.ts route metadata", () => {
     expect(entries[1]?.url).toContain("/siti");
   });
 
-  it("gracefully returns empty list and does not throw when database is unreachable", async () => {
+  it("gracefully returns empty list and logs error when database is unreachable", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     shouldFailDb = true;
     const entries = await sitemap();
     expect(entries).toEqual([]);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[Sitemap] Gagal mengambil profil kreator dari database:",
+      expect.any(Error)
+    );
+    consoleErrorSpy.mockRestore();
     shouldFailDb = false;
   });
 });
