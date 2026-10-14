@@ -111,3 +111,19 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Efisiensi Lingkungan Terbatas (Termux / Linux ARM64):** Kompilasi Next.js 16 dan typechecking multi-paket memakan daya CPU dan baterai yang besar di lingkungan perangkat terbatas. Cache hash Turborepo mengeliminasi kompilasi berulang yang tidak perlu.
   - **Parallelism & Dependency Awareness:** Turborepo menyusun dependency graph secara topologis (`^build`), mengeksekusi task paket-paket yang saling bebas secara paralel, dan hanya menjalankan ulang paket yang benar-benar terdampak perubahan kode.
   - **Isolasi Task Interaktif (`dev`):** Mengatur `cache: false` dan `persistent: true` pada task `dev` memastikan proses server Next.js tidak dicache dan berjalan terus-menerus mendengarkan perubahan file (_hot module replacement_).
+
+---
+
+## 10. Integrasi Google OAuth dengan Better Auth, Default Account Linking, dan Graceful Fallback
+
+- **Keputusan:**
+  - Mengintegrasikan Google OAuth sebagai penyedia autentikasi sosial (`socialProviders.google`) di Better Auth (`packages/auth`) yang dikonfigurasi melalui variabel lingkungan `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET`.
+  - Mengadopsi mekanisme _graceful degradation_ (fallback halus): Jika `GOOGLE_CLIENT_ID` atau `GOOGLE_CLIENT_SECRET` tidak dikonfigurasi (kosong), tombol "Lanjutkan dengan Google" pada halaman `/login` dan `/register` disembunyikan sepenuhnya di sisi server, dan aplikasi tetap berfungsi normal hanya dengan autentikasi email & kata sandi.
+  - Mempertahankan perilaku _account linking_ default dari Better Auth tanpa mengaktifkan auto-linking agresif atau plugin eksternal tambahan.
+  - Memanfaatkan skema tabel `account` dan `user` yang telah ada pada Drizzle ORM tanpa perlu melakukan migrasi skema database baru.
+  - Mendaftarkan `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` pada `globalEnv` dan task `env` di `turbo.json` serta `.env.example`.
+- **Rasional:**
+  - **Kemudahan Registrasi & Pengalaman Pengguna (UX):** Pengguna di pasar Indonesia sangat terbiasa dengan "One-click Sign-in" menggunakan akun Google. Menyediakan tombol "Lanjutkan dengan Google" mempercepat proses pendaftaran kreator baru tanpa harus mengetik dan mengingat kata sandi.
+  - **Zero Secrets Leakage ke Klien:** Penentuan status aktifnya Google OAuth dieksekusi secara aman di sisi server melalui Server Component (`apps/web/app/login/page.tsx` dan `apps/web/app/register/page.tsx`) dengan memanggil helper `isGoogleAuthEnabled()`, sehingga `GOOGLE_CLIENT_SECRET` tidak pernah diekspos ke browser atau bundle JavaScript publik.
+  - **Keamanan Akun (No Account Takeover):** Dengan mempertahankan perilaku default Better Auth untuk _account linking_, akun yang dibuat dengan email & kata sandi tidak akan otomatis terhubung secara diam-diam tanpa verifikasi identitas, mencegah celah pengambilalihan akun (_account takeover_).
+  - **Stabilitas Skema Database:** Tabel `account` yang dibuat pada Tahap 1 sudah memuat seluruh kolom OAuth yang diperlukan (`provider_id`, `account_id`, `access_token`, `refresh_token`, `id_token`, `scope`, `access_token_expires_at`), sehingga integrasi ini nol risiko perubahan skema database dan kompatibel langsung dengan DB produksi di Layerbase.

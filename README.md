@@ -66,6 +66,8 @@ Buka file `.env.local` dan pastikan variabel-variabel wajib berikut terisi:
 - `BETTER_AUTH_SECRET`: Kunci enkripsi sesi rahasia (minimal 32 karakter).
 - `BETTER_AUTH_URL`: URL aplikasi autentikasi (`http://localhost:3000` untuk lokal).
 - `NEXT_PUBLIC_APP_URL`: URL basis aplikasi untuk `metadataBase`, `robots.txt`, dan `sitemap.xml` (`http://localhost:3000` untuk lokal).
+- `GOOGLE_CLIENT_ID`: (Opsional) Google OAuth 2.0 Client ID. Jika kosong, tombol "Lanjutkan dengan Google" disembunyikan.
+- `GOOGLE_CLIENT_SECRET`: (Opsional) Google OAuth 2.0 Client Secret.
 
 ### Instalasi & Menjalankan Aplikasi
 
@@ -117,13 +119,15 @@ Saat mengimpor repositori ke Vercel Dashboard:
 
 Tambahkan seluruh variabel environment berikut pada menu **Settings > Environment Variables**:
 
-| Variable              | Keterangan & Contoh Nilai                                                                                              |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`        | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
-| `DATABASE_URL_DIRECT` | (Opsional) Connection string PostgreSQL direct (port 5432 non-pooled) jika diperlukan untuk DDL.                       |
-| `BETTER_AUTH_SECRET`  | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
-| `BETTER_AUTH_URL`     | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
-| `NEXT_PUBLIC_APP_URL` | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
+| Variable               | Keterangan & Contoh Nilai                                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
+| `DATABASE_URL_DIRECT`  | (Opsional) Connection string PostgreSQL direct (port 5432 non-pooled) jika diperlukan untuk DDL.                       |
+| `BETTER_AUTH_SECRET`   | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
+| `BETTER_AUTH_URL`      | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
+| `NEXT_PUBLIC_APP_URL`  | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
+| `GOOGLE_CLIENT_ID`     | (Opsional) Google OAuth 2.0 Client ID. Tombol Google otomatis disembunyikan jika tidak diisi.                          |
+| `GOOGLE_CLIENT_SECRET` | (Opsional) Google OAuth 2.0 Client Secret.                                                                             |
 
 ### 3. Migrasi Database Sebelum Deploy
 
@@ -135,6 +139,43 @@ DATABASE_URL_DIRECT="postgresql://..." pnpm db:migrate
 
 ---
 
+## Langkah Setup Google OAuth
+
+Openlynk mendukung masuk dan pendaftaran sekali klik dengan Google menggunakan Better Auth. Jika kredensial Google OAuth tidak dikonfigurasi, tombol "Lanjutkan dengan Google" otomatis disembunyikan dan sistem tetap beroperasi normal menggunakan autentikasi email & kata sandi.
+
+Untuk mengaktifkan Google OAuth:
+
+1. **Buka Google Cloud Console:**
+   Kunjungi [Google Cloud Console](https://console.cloud.google.com/) dan buat proyek baru (misal `openlynk`) atau pilih proyek yang sudah ada.
+
+2. **Konfigurasi OAuth Consent Screen:**
+   - Navigasi ke **APIs & Services > OAuth consent screen**.
+   - Pilih User Type **External** dan lengkapi data aplikasi (App name, User support email, Developer contact).
+
+3. **Buat Kredensial OAuth 2.0:**
+   - Navigasi ke **APIs & Services > Credentials** > klik **Create Credentials** > pilih **OAuth client ID**.
+   - Application type: **Web application**.
+   - Name: `Openlynk Web Client`.
+   - **Authorized JavaScript origins:**
+     - Lokal: `http://localhost:3000`
+     - Produksi: `https://openlynk.id` (sesuaikan dengan domain Anda)
+   - **Authorized redirect URIs:**
+     - Lokal: `http://localhost:3000/api/auth/callback/google`
+     - Produksi: `https://openlynk.id/api/auth/callback/google`
+
+4. **Simpan Environment Variables:**
+   Salin **Client ID** dan **Client Secret**, lalu masukkan ke `.env.local` lokal dan Vercel Environment Variables:
+
+   ```bash
+   GOOGLE_CLIENT_ID="xxxx-xxxx.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="GOCSPX-xxxx"
+   ```
+
+5. **Verifikasi:**
+   Jalankan `pnpm dev` dan buka `/login` atau `/register`. Tombol **"Lanjutkan dengan Google"** akan otomatis muncul dan mengarahkan pengguna ke alur autentikasi Google.
+
+---
+
 ## Dokumentasi Arsitektur
 
-Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, pnpm workspaces, penanganan connection pooler (`prepare: false`), serta Route Metadata (`robots.txt` dan `sitemap.xml`).
+Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, Google OAuth social provider, pnpm workspaces, penanganan connection pooler (`prepare: false`), serta Route Metadata (`robots.txt` dan `sitemap.xml`).
