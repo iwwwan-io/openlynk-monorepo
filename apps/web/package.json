@@ -3,21 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
-    "start": "next start",
+    "dev": "node ./scripts/next-runner.mjs dev",
+    "build": "node ./scripts/next-runner.mjs build",
+    "start": "node ./scripts/next-runner.mjs start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
-    "@next/swc-wasm-nodejs": "16.4.0",
     "@openlynk/auth": "workspace:*",
     "@openlynk/db": "workspace:*",
     "@openlynk/ui": "workspace:*",
     "next": "16.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "optionalDependencies": {
+    "@next/swc-wasm-nodejs": "16.4.0"
   },
   "devDependencies": {
     "@openlynk/config": "workspace:*",
