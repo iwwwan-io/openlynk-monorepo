@@ -96,3 +96,16 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Kompatibilitas Connection Pooler Serverless:** Arsitektur serverless (seperti Vercel) membuka banyak koneksi singkat ke Postgres via transaction pooler (Layerbase pooler, Supabase Supavisor, PgBouncer). Transaction pooler tidak mempertahankan state _prepared statements_ antar-koneksi. Mengaktifkan `prepare: false` mencegah error fatal `prepared statement does not exist` atau duplikasi nama statement.
   - **Keandalan Migrasi Skema DDL:** Perintah migrasi skema Drizzle (`drizzle-kit migrate`) menjalankan DDL locks dan transaksi skema yang tidak didukung atau rentan timeout pada pooler transaksi. Mengarahkan migrasi ke `DATABASE_URL_DIRECT` (port 5432 session mode) menjamin migrasi skema selalu atomik dan berhasil.
   - **SEO & Indexing Terstandarisasi:** Route Metadata Next.js menghasilkan `robots.txt` dan `sitemap.xml` yang valid secara native tanpa file statis manual. Sitemap terbarui secara real-time berdasarkan kreator terdaftar di database, memblokir pengindeksan rute privat (`/dashboard`, `/api`), dan didukung absolute OpenGraph URL berkat `metadataBase`.
+
+---
+
+## 9. Adopsi Turborepo untuk Pipeline Orchestration dan Computation Caching
+
+- **Keputusan:**
+  - Mengintegrasikan Turborepo (`turbo`) di atas pnpm Workspaces dengan konfigurasi terpusat pada `turbo.json`.
+  - Mengorkestrasikan tugas-tugas monorepo (`build`, `typecheck`, `lint`, `test`, `dev`) melalui pipeline Turborepo.
+  - Memanfaatkan _local computation caching_ dan integrasi native _Vercel Remote Caching_ untuk mencegah kompilasi ulang pada paket yang tidak mengalami perubahan.
+- **Rasional:**
+  - **Akselerasi Build & Typecheck Lokal:** Pada lingkungan komputasi terbatas seperti Termux (Linux ARM64), kompilasi Next.js 16 dan typechecking multi-paket memakan waktu dan daya baterai yang signifikan. Caching hash Turborepo memangkas waktu eksekusi task yang tidak berubah dari menit ke milidetik (`FULL TURBO`).
+  - **Parallelism & Dependency Awareness:** Turborepo secara topologis menyusun dependency graph (`^build`), mengeksekusi paket-paket independen secara paralel, dan hanya membangun ulang paket yang terpengaruh perubahan kode.
+  - **Kompatibilitas Penuh dengan pnpm:** Tetap menggunakan pnpm workspaces untuk isolasi dependensi dan symlink paket internal yang ketat, dikombinasikan dengan Turborepo murni untuk penjadwalan dan caching task.

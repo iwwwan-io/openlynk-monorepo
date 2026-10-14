@@ -11,7 +11,7 @@ Lisensi: **AGPL-3.0** (GNU Affero General Public License v3.0).
 - **Styling:** Tailwind CSS
 - **Database & ORM:** PostgreSQL + Drizzle ORM
 - **Autentikasi:** Better Auth
-- **Workspace:** pnpm Workspaces
+- **Workspace & Build System:** pnpm Workspaces + Turborepo
 - **Quality Assurance:** ESLint, Prettier, Vitest
 
 ## Struktur Monorepo
@@ -27,6 +27,7 @@ openlynk/
 │   └── ui/             # Shared UI components and primitives
 ├── docs/
 │   └── DECISIONS.md    # Catatan keputusan arsitektur & teknologi
+├── turbo.json          # Konfigurasi pipeline & caching Turborepo
 ├── .env.example        # Template konfigurasi environment
 └── LICENSE             # GNU Affero General Public License v3.0
 ```
