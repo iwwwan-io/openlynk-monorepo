@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auth, createAuth } from "./index";
+import { auth, createAuth, isGoogleAuthEnabled } from "./index";
 
 describe("Better Auth configuration", () => {
   it("initializes auth instance with required email and password handlers", () => {
@@ -15,5 +15,57 @@ describe("Better Auth configuration", () => {
     const customAuth = createAuth();
     expect(customAuth).toBeDefined();
     expect(typeof customAuth.api.getSession).toBe("function");
+  });
+
+  it("accurately detects if Google OAuth is configured via isGoogleAuthEnabled", () => {
+    const prevClientId = process.env.GOOGLE_CLIENT_ID;
+    const prevClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    delete process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_SECRET;
+    expect(isGoogleAuthEnabled()).toBe(false);
+
+    process.env.GOOGLE_CLIENT_ID = "mock-id";
+    delete process.env.GOOGLE_CLIENT_SECRET;
+    expect(isGoogleAuthEnabled()).toBe(false);
+
+    process.env.GOOGLE_CLIENT_SECRET = "mock-secret";
+    expect(isGoogleAuthEnabled()).toBe(true);
+
+    if (prevClientId !== undefined) {
+      process.env.GOOGLE_CLIENT_ID = prevClientId;
+    } else {
+      delete process.env.GOOGLE_CLIENT_ID;
+    }
+    if (prevClientSecret !== undefined) {
+      process.env.GOOGLE_CLIENT_SECRET = prevClientSecret;
+    } else {
+      delete process.env.GOOGLE_CLIENT_SECRET;
+    }
+  });
+
+  it("initializes auth with Google social provider when env variables are present", () => {
+    const prevClientId = process.env.GOOGLE_CLIENT_ID;
+    const prevClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    process.env.GOOGLE_CLIENT_ID = "mock-client-id";
+    process.env.GOOGLE_CLIENT_SECRET = "mock-client-secret";
+
+    try {
+      const customAuth = createAuth();
+      expect(customAuth).toBeDefined();
+      expect(typeof customAuth.api.getSession).toBe("function");
+    } finally {
+      if (prevClientId !== undefined) {
+        process.env.GOOGLE_CLIENT_ID = prevClientId;
+      } else {
+        delete process.env.GOOGLE_CLIENT_ID;
+      }
+      if (prevClientSecret !== undefined) {
+        process.env.GOOGLE_CLIENT_SECRET = prevClientSecret;
+      } else {
+        delete process.env.GOOGLE_CLIENT_SECRET;
+      }
+    }
   });
 });
