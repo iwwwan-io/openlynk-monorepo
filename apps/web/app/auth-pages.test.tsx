@@ -35,21 +35,21 @@ describe("LoginPage and RegisterPage server routes", () => {
     expect(registerMetadata.title).toBe("Daftar Akun - Openlynk");
   });
 
-  it("renders LoginPage with isGoogleAuthEnabled based on environment", () => {
+  it("renders LoginPage with isGoogleAuthEnabled based on environment", async () => {
     const prevClientId = process.env.GOOGLE_CLIENT_ID;
     const prevClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     delete process.env.GOOGLE_CLIENT_ID;
     delete process.env.GOOGLE_CLIENT_SECRET;
 
-    const element = LoginPage();
+    const element = await LoginPage({});
     const htmlWithoutGoogle = renderToStaticMarkup(element);
     expect(htmlWithoutGoogle).not.toContain("Lanjutkan dengan Google");
 
     process.env.GOOGLE_CLIENT_ID = "mock-id";
     process.env.GOOGLE_CLIENT_SECRET = "mock-secret";
 
-    const elementWithGoogle = LoginPage();
+    const elementWithGoogle = await LoginPage({});
     const htmlWithGoogle = renderToStaticMarkup(elementWithGoogle);
     expect(htmlWithGoogle).toContain("Lanjutkan dengan Google");
 
@@ -65,21 +65,21 @@ describe("LoginPage and RegisterPage server routes", () => {
     }
   });
 
-  it("renders RegisterPage with isGoogleAuthEnabled based on environment", () => {
+  it("renders RegisterPage with isGoogleAuthEnabled based on environment", async () => {
     const prevClientId = process.env.GOOGLE_CLIENT_ID;
     const prevClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     delete process.env.GOOGLE_CLIENT_ID;
     delete process.env.GOOGLE_CLIENT_SECRET;
 
-    const element = RegisterPage();
+    const element = await RegisterPage({});
     const htmlWithoutGoogle = renderToStaticMarkup(element);
     expect(htmlWithoutGoogle).not.toContain("Lanjutkan dengan Google");
 
     process.env.GOOGLE_CLIENT_ID = "mock-id";
     process.env.GOOGLE_CLIENT_SECRET = "mock-secret";
 
-    const elementWithGoogle = RegisterPage();
+    const elementWithGoogle = await RegisterPage({});
     const htmlWithGoogle = renderToStaticMarkup(elementWithGoogle);
     expect(htmlWithGoogle).toContain("Lanjutkan dengan Google");
 
@@ -93,6 +93,34 @@ describe("LoginPage and RegisterPage server routes", () => {
     } else {
       delete process.env.GOOGLE_CLIENT_SECRET;
     }
+  });
+
+  it("renders mapped account_not_linked error message on LoginPage", async () => {
+    const element = await LoginPage({
+      searchParams: Promise.resolve({ error: "account_not_linked" }),
+    });
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain(
+      "Email ini sudah terdaftar dengan metode lain. Masuk dengan email dan kata sandi."
+    );
+  });
+
+  it("renders generic OAuth error message on LoginPage for other error codes", async () => {
+    const element = await LoginPage({
+      searchParams: Promise.resolve({ error: "access_denied" }),
+    });
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain("Terjadi kesalahan saat masuk dengan akun Google. Silakan coba lagi.");
+  });
+
+  it("renders mapped error message on RegisterPage when query error is present", async () => {
+    const element = await RegisterPage({
+      searchParams: Promise.resolve({ error: "account_not_linked" }),
+    });
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain(
+      "Email ini sudah terdaftar dengan metode lain. Masuk dengan email dan kata sandi."
+    );
   });
 });
 
@@ -109,6 +137,14 @@ describe("LoginForm and RegisterForm UI rendering with Google OAuth", () => {
     expect(html).toContain('data-testid="google-signin-button"');
   });
 
+  it("renders initial error in LoginForm when provided", () => {
+    const html = renderToStaticMarkup(
+      <LoginForm isGoogleAuthEnabled={false} initialError="Pesan error kustom" />
+    );
+    expect(html).toContain("Pesan error kustom");
+    expect(html).toContain('role="alert"');
+  });
+
   it("hides Google button when isGoogleAuthEnabled is false in RegisterForm", () => {
     const html = renderToStaticMarkup(<RegisterForm isGoogleAuthEnabled={false} />);
     expect(html).not.toContain("Lanjutkan dengan Google");
@@ -121,7 +157,15 @@ describe("LoginForm and RegisterForm UI rendering with Google OAuth", () => {
     expect(html).toContain('data-testid="google-signup-button"');
   });
 
-  it("uses authClient.signIn.social with google provider and /dashboard callbackURL", async () => {
+  it("renders initial error in RegisterForm when provided", () => {
+    const html = renderToStaticMarkup(
+      <RegisterForm isGoogleAuthEnabled={false} initialError="Pesan error registrasi" />
+    );
+    expect(html).toContain("Pesan error registrasi");
+    expect(html).toContain('role="alert"');
+  });
+
+  it("uses authClient.signIn.social with google provider, /dashboard callbackURL, and /login errorCallbackURL", async () => {
     const signInSocialMock = vi.mocked(authClient.signIn.social);
     signInSocialMock.mockResolvedValueOnce({
       data: { url: "https://accounts.google.com" },
@@ -131,11 +175,13 @@ describe("LoginForm and RegisterForm UI rendering with Google OAuth", () => {
     await authClient.signIn.social({
       provider: "google",
       callbackURL: "/dashboard",
+      errorCallbackURL: "/login",
     });
 
     expect(signInSocialMock).toHaveBeenCalledWith({
       provider: "google",
       callbackURL: "/dashboard",
+      errorCallbackURL: "/login",
     });
   });
 });

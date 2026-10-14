@@ -68,4 +68,15 @@ describe("Better Auth configuration", () => {
       }
     }
   });
+
+  it("preserves default Better Auth account linking behavior (no aggressive auto-linking)", () => {
+    const customAuth = createAuth();
+    // Verify that customAuth options do not enable implicit linking override
+    const options = (
+      customAuth as unknown as {
+        options?: { account?: { accountLinking?: { enabled?: boolean } } };
+      }
+    ).options;
+    expect(options?.account?.accountLinking?.enabled).toBeUndefined();
+  });
 });

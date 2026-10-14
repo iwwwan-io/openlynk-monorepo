@@ -1,6 +1,7 @@
 import { isGoogleAuthEnabled } from "@openlynk/auth";
 import type { Metadata } from "next";
 import React from "react";
+import { getOAuthErrorMessage } from "@/lib/oauth-error";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
@@ -10,8 +11,17 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
+export interface RegisterPageProps {
+  params?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RegisterPage(props: RegisterPageProps) {
+  const resolvedParams = await props.searchParams;
+  const rawError = resolvedParams?.error;
+  const errorCode = typeof rawError === "string" ? rawError : undefined;
+  const errorMessage = getOAuthErrorMessage(errorCode);
   const googleEnabled = isGoogleAuthEnabled();
 
-  return <RegisterForm isGoogleAuthEnabled={googleEnabled} />;
+  return <RegisterForm isGoogleAuthEnabled={googleEnabled} initialError={errorMessage} />;
 }

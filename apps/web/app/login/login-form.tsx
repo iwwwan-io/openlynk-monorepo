@@ -7,12 +7,13 @@ import React, { useState } from "react";
 
 export interface LoginFormProps {
   isGoogleAuthEnabled?: boolean;
+  initialError?: string | null;
 }
 
-export function LoginForm({ isGoogleAuthEnabled = false }: LoginFormProps) {
+export function LoginForm({ isGoogleAuthEnabled = false, initialError }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -24,6 +25,7 @@ export function LoginForm({ isGoogleAuthEnabled = false }: LoginFormProps) {
       const res = await authClient.signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
+        errorCallbackURL: "/login",
       });
 
       if (res?.error) {

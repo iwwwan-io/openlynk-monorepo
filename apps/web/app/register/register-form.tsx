@@ -7,13 +7,14 @@ import React, { useState } from "react";
 
 export interface RegisterFormProps {
   isGoogleAuthEnabled?: boolean;
+  initialError?: string | null;
 }
 
-export function RegisterForm({ isGoogleAuthEnabled = false }: RegisterFormProps) {
+export function RegisterForm({ isGoogleAuthEnabled = false, initialError }: RegisterFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -25,6 +26,7 @@ export function RegisterForm({ isGoogleAuthEnabled = false }: RegisterFormProps)
       const res = await authClient.signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
+        errorCallbackURL: "/login",
       });
 
       if (res?.error) {
