@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  getMidtransConfig,
-  validateBuyerEmail,
-  validateBuyerName,
-} from "@/lib/midtrans";
+import { getMidtransConfig, validateBuyerEmail, validateBuyerName } from "@/lib/midtrans";
 import { eq, getDb, order, product } from "@openlynk/db";
 import crypto from "node:crypto";
 

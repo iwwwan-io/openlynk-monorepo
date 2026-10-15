@@ -181,7 +181,10 @@ export function mapMidtransStatus(
  * Aturan Idempotensi status pesanan:
  * Status "paid" adalah final dan TIDAK BOLEH diturunkan ke status lain (pending, expired, failed).
  */
-export function isStatusDowngradeBlocked(currentStatus: OrderStatus, newStatus: OrderStatus): boolean {
+export function isStatusDowngradeBlocked(
+  currentStatus: OrderStatus,
+  newStatus: OrderStatus
+): boolean {
   if (currentStatus === "paid" && newStatus !== "paid") {
     return true;
   }
@@ -196,9 +199,7 @@ export function getMidtransConfig() {
   const clientKey = process.env.MIDTRANS_CLIENT_KEY || "";
   const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 
-  const apiBaseUrl = isProduction
-    ? "https://app.midtrans.com"
-    : "https://app.sandbox.midtrans.com";
+  const apiBaseUrl = isProduction ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
 
   const snapScriptUrl = isProduction
     ? "https://app.midtrans.com/snap/snap.js"

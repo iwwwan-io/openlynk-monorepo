@@ -24,7 +24,6 @@ describe("Database schema", () => {
     expect(getTableName(order)).toBe("order");
   });
 
-
   it("verifies user table structure", () => {
     expect(user.id).toBeDefined();
     expect(user.name).toBeDefined();
@@ -109,7 +108,6 @@ describe("Database schema", () => {
   });
 
   it("exports createDbClient factory function and accepts options", () => {
-
     expect(typeof createDbClient).toBe("function");
     const testClient = createDbClient("postgresql://postgres:postgres@localhost:5432/test", {
       prepare: false,

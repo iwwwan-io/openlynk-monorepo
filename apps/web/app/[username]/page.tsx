@@ -201,7 +201,6 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
                         </Button>
                       </Link>
                     </div>
-
                   </div>
                 </Card>
               ))}

@@ -149,7 +149,6 @@ describe("PublicProfilePage (/[username]) & Security Checks", () => {
     expect(html).toContain("/checkout/prod-1");
     expect(html).toContain("/checkout/prod-2");
 
-
     // CRITICAL SECURITY ASSERTIONS:
     // 1. Check that query projection NEVER asked for deliveryUrl / delivery_url
     const productSelection = selectCalls.find(
@@ -204,7 +203,6 @@ describe("PublicProfilePage (/[username]) & Security Checks", () => {
     expect(html).toContain("Rp 50.000");
     expect(html).toContain("Beli");
     expect(html).toContain("/checkout/prod-leak-test");
-
 
     // SECURITY CHECK:
     expect(html).not.toContain(leakAttemptUrl);

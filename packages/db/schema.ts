@@ -168,4 +168,3 @@ export type NewProduct = typeof product.$inferInsert;
 
 export type Order = typeof order.$inferSelect;
 export type NewOrder = typeof order.$inferInsert;
-

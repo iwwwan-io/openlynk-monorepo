@@ -21,8 +21,7 @@ export async function POST(req: Request) {
   const signatureKey = typeof body.signature_key === "string" ? body.signature_key.trim() : "";
   const transactionStatus =
     typeof body.transaction_status === "string" ? body.transaction_status.trim() : "";
-  const fraudStatus =
-    typeof body.fraud_status === "string" ? body.fraud_status.trim() : null;
+  const fraudStatus = typeof body.fraud_status === "string" ? body.fraud_status.trim() : null;
 
   const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
 
@@ -30,16 +29,16 @@ export async function POST(req: Request) {
   const isSignatureValid = verifyMidtransSignature({
     orderId,
     statusCode,
-    grossAmount: typeof grossAmountRaw === "string" || typeof grossAmountRaw === "number" ? grossAmountRaw : "",
+    grossAmount:
+      typeof grossAmountRaw === "string" || typeof grossAmountRaw === "number"
+        ? grossAmountRaw
+        : "",
     serverKey,
     signatureKey,
   });
 
   if (!isSignatureValid) {
-    return NextResponse.json(
-      { error: "Forbidden: Signature key tidak valid" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Forbidden: Signature key tidak valid" }, { status: 403 });
   }
 
   // 2. Cari order di database berdasarkan midtrans_order_id
@@ -51,10 +50,7 @@ export async function POST(req: Request) {
     .limit(1);
 
   if (!existingOrder) {
-    return NextResponse.json(
-      { error: "Not Found: Pesanan tidak ditemukan" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Not Found: Pesanan tidak ditemukan" }, { status: 404 });
   }
 
   // 3. Cocokkan gross_amount dengan amount_idr order (bandingkan sebagai angka)
@@ -108,10 +104,7 @@ export async function POST(req: Request) {
     updatePayload.paidAt = new Date();
   }
 
-  await db
-    .update(order)
-    .set(updatePayload)
-    .where(eq(order.id, existingOrder.id));
+  await db.update(order).set(updatePayload).where(eq(order.id, existingOrder.id));
 
   return NextResponse.json(
     { status: "ok", message: `Status pesanan berhasil diperbarui ke ${newStatus}` },

@@ -2,7 +2,16 @@
 
 import { createOrderAction } from "@/app/actions/order";
 import { formatPriceIdr } from "@/lib/product-validation";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@openlynk/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@openlynk/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -38,12 +47,7 @@ interface CheckoutFormProps {
   snapScriptUrl: string;
 }
 
-export function CheckoutForm({
-  product,
-  creator,
-  clientKey,
-  snapScriptUrl,
-}: CheckoutFormProps) {
+export function CheckoutForm({ product, creator, clientKey, snapScriptUrl }: CheckoutFormProps) {
   const router = useRouter();
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
@@ -96,11 +100,7 @@ export function CheckoutForm({
   return (
     <>
       {snapScriptUrl && (
-        <Script
-          src={snapScriptUrl}
-          data-client-key={clientKey}
-          strategy="afterInteractive"
-        />
+        <Script src={snapScriptUrl} data-client-key={clientKey} strategy="afterInteractive" />
       )}
 
       <div className="mx-auto max-w-lg space-y-6">
@@ -121,9 +121,7 @@ export function CheckoutForm({
                 </Link>
               </span>
             </div>
-            <CardTitle className="text-xl font-bold text-slate-900 mt-1">
-              {product.title}
-            </CardTitle>
+            <CardTitle className="text-xl font-bold text-slate-900 mt-1">{product.title}</CardTitle>
             {product.description && (
               <CardDescription className="text-xs text-slate-600 whitespace-pre-wrap mt-1">
                 {product.description}
@@ -143,9 +141,7 @@ export function CheckoutForm({
         {/* Formulir Data Pembeli */}
         <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-slate-900">
-              Informasi Pembeli
-            </CardTitle>
+            <CardTitle className="text-base font-bold text-slate-900">Informasi Pembeli</CardTitle>
             <CardDescription className="text-xs text-slate-500">
               Masukkan nama dan email untuk menerima link akses produk setelah pembayaran.
             </CardDescription>

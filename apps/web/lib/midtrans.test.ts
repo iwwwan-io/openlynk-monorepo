@@ -75,10 +75,7 @@ describe("verifyMidtransSignature", () => {
   const serverKey = "SB-Mid-server-TESTKEY123";
 
   function createValidSignature(oId: string, sCode: string, gAmount: string, sKey: string) {
-    return crypto
-      .createHash("sha512")
-      .update(`${oId}${sCode}${gAmount}${sKey}`)
-      .digest("hex");
+    return crypto.createHash("sha512").update(`${oId}${sCode}${gAmount}${sKey}`).digest("hex");
   }
 
   it("verifies valid signature successfully", () => {

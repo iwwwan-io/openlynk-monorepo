@@ -96,7 +96,10 @@ export default async function OrderPage(props: OrderPageProps) {
               <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xl">
                 ⏳
               </div>
-              <Badge variant="outline" className="mx-auto bg-amber-50 text-amber-800 border-amber-300">
+              <Badge
+                variant="outline"
+                className="mx-auto bg-amber-50 text-amber-800 border-amber-300"
+              >
                 Menunggu Pembayaran
               </Badge>
               <CardTitle className="text-xl font-bold text-slate-900 mt-2">
@@ -138,7 +141,10 @@ export default async function OrderPage(props: OrderPageProps) {
               <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700 text-xl font-bold">
                 ✓
               </div>
-              <Badge variant="outline" className="mx-auto bg-green-50 text-green-800 border-green-300">
+              <Badge
+                variant="outline"
+                className="mx-auto bg-green-50 text-green-800 border-green-300"
+              >
                 Pembayaran Berhasil
               </Badge>
               <CardTitle className="text-2xl font-bold text-slate-900 mt-2">
