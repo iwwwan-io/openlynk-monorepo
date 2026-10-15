@@ -1,7 +1,7 @@
 import { logoutAction } from "@/app/actions/auth";
-import { LinkManager } from "@/app/dashboard/link-manager";
-import { OnboardingForm } from "@/app/dashboard/onboarding-form";
-import { ProfileForm } from "@/app/dashboard/profile-form";
+import { LinkManager } from "./link-manager";
+import { OnboardingForm } from "./onboarding-form";
+import { ProfileForm } from "./profile-form";
 import { isSessionAuthorized } from "@/lib/auth-validation";
 import { auth } from "@openlynk/auth";
 import { asc, eq, getDb, link, profile } from "@openlynk/db";

@@ -127,3 +127,19 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Zero Secrets Leakage ke Klien:** Penentuan status aktifnya Google OAuth dieksekusi secara aman di sisi server melalui Server Component (`apps/web/app/login/page.tsx` dan `apps/web/app/register/page.tsx`) dengan memanggil helper `isGoogleAuthEnabled()`, sehingga `GOOGLE_CLIENT_SECRET` tidak pernah diekspos ke browser atau bundle JavaScript publik.
   - **Keamanan Akun (No Account Takeover):** Dengan mempertahankan perilaku default Better Auth untuk _account linking_, akun yang dibuat dengan email & kata sandi tidak akan otomatis terhubung secara diam-diam tanpa verifikasi identitas, mencegah celah pengambilalihan akun (_account takeover_).
   - **Stabilitas Skema Database:** Tabel `account` yang dibuat pada Tahap 1 sudah memuat seluruh kolom OAuth yang diperlukan (`provider_id`, `account_id`, `access_token`, `refresh_token`, `id_token`, `scope`, `access_token_expires_at`), sehingga integrasi ini nol risiko perubahan skema database dan kompatibel langsung dengan DB produksi di Layerbase.
+
+---
+
+## 11. Arsitektur shadcn/ui Monorepo di packages/ui, Route Groups Next.js, dan Segment Reserved Usernames
+
+- **Keputusan:**
+  - Mengintegrasikan komponen shadcn/ui ke dalam monorepo dengan meletakkan seluruh komponen UI bersama (`Button`, `Input`, `Label`, `Textarea`, `Card`, `Badge`) serta fungsi utilitas `cn` (`clsx` + `tailwind-merge`) di dalam paket `@openlynk/ui` (`packages/ui`).
+  - Mengikuti versi Tailwind CSS yang terpasang di `apps/web` (Tailwind CSS v3) dengan konfigurasi token desain CSS variables murni tanpa dark mode dan tanpa abstraksi tema kustom yang berlebihan.
+  - Mengorganisasikan rute Next.js App Router ke dalam _Route Groups_: `(marketing)`, `(auth)`, dan `(dashboard)` tanpa mengubah URL eksternal sama sekali.
+  - Mengimplementasikan server session guard terpusat pada layout `apps/web/app/(dashboard)/layout.tsx` menggunakan `auth.api.getSession()` yang memverifikasi sesi pengguna di sisi server sebelum merender navigasi dasar (nama aplikasi "Openlynk", tautan ke halaman publik kreator, dan tombol logout), sembari tetap mempertahankan verifikasi sesi mandiri pada setiap Server Action dan halaman dashboard.
+  - Memperluas daftar `RESERVED_USERNAMES` pada `apps/web/lib/profile-validation.ts` dengan segmen-segmen top-level rute yang akan digunakan oleh aplikasi: `checkout`, `order`, `orders`, `products`, `links`, `settings`, dan `webhooks`.
+- **Rasional:**
+  - **Single Source of Truth untuk Komponen UI:** Menyimpan komponen primitif di `packages/ui` memungkinkan reuse komponen di seluruh aplikasi monorepo masa depan, menghindari fragmentasi styling, dan memudahkan pemeliharaan konsistensi desain UI/UX.
+  - **Pemisahan Tanggung Jawab Melalui Route Groups:** Penggunaan Route Groups `(marketing)`, `(auth)`, `(dashboard)` memungkinkan isolasi layout spesifik (seperti shell navigasi dashboard dengan session guard) tanpa mempengaruhi URL publik atau menambahkan segmen path yang tidak diinginkan pada URL browser.
+  - **Defense-in-Depth untuk Keamanan Sesi:** Menempatkan server session guard pada `(dashboard)/layout.tsx` memberikan lapisan keamanan pertama yang mencegah render komponen dashboard bagi pengunjung tanpa sesi aktif, sementara pengecekan session di setiap Server Action dan halaman tetap dipertahankan untuk menjamin zero unauthorized access pada level aksi data.
+  - **Pencegahan Konflik Routing Profil Kreator:** Karena halaman publik kreator beroperasi pada segmen dinamis top-level `/[username]`, segmen sistem penting seperti `checkout`, `order`, `orders`, `products`, `links`, `webhooks`, dan `settings` harus dicadangkan (`RESERVED_USERNAMES`) agar pendaftaran username baru tidak pernah menimpa atau menabrak rute fungsional aplikasi.

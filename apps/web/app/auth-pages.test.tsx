@@ -2,13 +2,13 @@ import { authClient } from "@openlynk/auth/client";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { LoginForm } from "./login/login-form";
-import LoginPage, { dynamic as loginDynamic, metadata as loginMetadata } from "./login/page";
-import { RegisterForm } from "./register/register-form";
+import { LoginForm } from "./(auth)/login/login-form";
+import LoginPage, { dynamic as loginDynamic, metadata as loginMetadata } from "./(auth)/login/page";
+import { RegisterForm } from "./(auth)/register/register-form";
 import RegisterPage, {
   dynamic as registerDynamic,
   metadata as registerMetadata,
-} from "./register/page";
+} from "./(auth)/register/page";
 
 vi.mock("@openlynk/auth/client", () => {
   return {

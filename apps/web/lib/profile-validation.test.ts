@@ -47,6 +47,12 @@ describe("validateUsername", () => {
       "api",
       "admin",
       "settings",
+      "checkout",
+      "order",
+      "orders",
+      "products",
+      "links",
+      "webhooks",
       "_next",
       "404",
       "500",
@@ -68,6 +74,12 @@ describe("validateUsername", () => {
     expect(RESERVED_USERNAMES.has("api")).toBe(true);
     expect(RESERVED_USERNAMES.has("admin")).toBe(true);
     expect(RESERVED_USERNAMES.has("settings")).toBe(true);
+    expect(RESERVED_USERNAMES.has("checkout")).toBe(true);
+    expect(RESERVED_USERNAMES.has("order")).toBe(true);
+    expect(RESERVED_USERNAMES.has("orders")).toBe(true);
+    expect(RESERVED_USERNAMES.has("products")).toBe(true);
+    expect(RESERVED_USERNAMES.has("links")).toBe(true);
+    expect(RESERVED_USERNAMES.has("webhooks")).toBe(true);
     expect(RESERVED_USERNAMES.has("_next")).toBe(true);
     expect(RESERVED_USERNAMES.has("404")).toBe(true);
     expect(RESERVED_USERNAMES.has("500")).toBe(true);
