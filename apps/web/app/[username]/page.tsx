@@ -1,4 +1,5 @@
 import { formatPriceIdr } from "@/lib/product-validation";
+import { validateUsername } from "@/lib/profile-validation";
 import { and, asc, eq, getDb, link, product, profile } from "@openlynk/db";
 import { Badge, Button, Card } from "@openlynk/ui";
 import type { Metadata } from "next";
@@ -17,7 +18,16 @@ interface PublicProfilePageProps {
  */
 export async function generateMetadata(props: PublicProfilePageProps): Promise<Metadata> {
   const { username } = await props.params;
-  const normalizedUsername = username.toLowerCase();
+  const usernameValidation = validateUsername(username);
+
+  if (!usernameValidation.valid) {
+    return {
+      title: "Profil Tidak Ditemukan | Openlynk",
+      description: "Halaman kreator tidak ditemukan di Openlynk.",
+    };
+  }
+
+  const normalizedUsername = usernameValidation.normalized!;
   const db = getDb();
 
   const [userProfile] = await db
@@ -67,7 +77,13 @@ export async function generateMetadata(props: PublicProfilePageProps): Promise<M
  */
 export default async function PublicProfilePage(props: PublicProfilePageProps) {
   const { username } = await props.params;
-  const normalizedUsername = username.toLowerCase();
+  const usernameValidation = validateUsername(username);
+
+  if (!usernameValidation.valid) {
+    notFound();
+  }
+
+  const normalizedUsername = usernameValidation.normalized!;
   const db = getDb();
 
   const [userProfile] = await db

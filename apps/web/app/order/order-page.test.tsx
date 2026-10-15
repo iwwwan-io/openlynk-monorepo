@@ -32,6 +32,11 @@ vi.mock("@openlynk/db", () => {
         };
         return queryObj;
       },
+      update: () => ({
+        set: () => ({
+          where: () => Promise.resolve(),
+        }),
+      }),
     }),
     eq: vi.fn((col, val) => ({ col, val })),
     order: {
@@ -40,6 +45,7 @@ vi.mock("@openlynk/db", () => {
       productTitle: "order.productTitle",
       amountIdr: "order.amountIdr",
       status: "order.status",
+      midtransOrderId: "order.midtransOrderId",
       buyerName: "order.buyerName",
       buyerEmail: "order.buyerEmail",
       paidAt: "order.paidAt",

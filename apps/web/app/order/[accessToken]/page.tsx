@@ -1,3 +1,4 @@
+import { fetchMidtransOrderStatus } from "@/lib/midtrans";
 import { OrderStatusRefresh } from "./order-status-refresh";
 import { formatPriceIdr } from "@/lib/product-validation";
 import { eq, getDb, order, product, profile } from "@openlynk/db";
@@ -36,13 +37,14 @@ export default async function OrderPage(props: OrderPageProps) {
   const db = getDb();
 
   // 1. Ambil data order awal tanpa delivery_url
-  const [orderData] = await db
+  const [initialOrder] = await db
     .select({
       id: order.id,
       productId: order.productId,
       productTitle: order.productTitle,
       amountIdr: order.amountIdr,
       status: order.status,
+      midtransOrderId: order.midtransOrderId,
       buyerName: order.buyerName,
       buyerEmail: order.buyerEmail,
       paidAt: order.paidAt,
@@ -52,8 +54,34 @@ export default async function OrderPage(props: OrderPageProps) {
     .where(eq(order.accessToken, accessToken))
     .limit(1);
 
-  if (!orderData) {
+  if (!initialOrder) {
     notFound();
+  }
+
+  let orderData = { ...initialOrder };
+
+  // Sinkronisasi status langsung dari Midtrans API jika status saat ini masih 'pending'
+  if (orderData.status === "pending" && orderData.midtransOrderId) {
+    const remote = await fetchMidtransOrderStatus(orderData.midtransOrderId);
+    if (remote && remote.status && remote.status !== "pending") {
+      const isValidAmount =
+        remote.grossAmount === null || remote.grossAmount === orderData.amountIdr;
+      if (isValidAmount) {
+        const newStatus = remote.status;
+        const newPaidAt = newStatus === "paid" ? new Date() : null;
+        await db
+          .update(order)
+          .set({
+            status: newStatus,
+            paidAt: newPaidAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(order.id, orderData.id));
+
+        orderData.status = newStatus;
+        orderData.paidAt = newPaidAt;
+      }
+    }
   }
 
   // 2. Ambil profil kreator produk untuk tautan kembali
@@ -130,7 +158,32 @@ export default async function OrderPage(props: OrderPageProps) {
                 </div>
               </div>
 
+              <div className="rounded-lg bg-amber-50/80 p-3 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+                💡 <strong>Catatan:</strong> Jika Anda membatalkan pembayaran di jendela Midtrans
+                (misalnya batal scan QRIS), pesanan ini akan otomatis kedaluwarsa setelah batas
+                waktu habis. Anda dapat melakukan pembelian ulang kapan saja.
+              </div>
+
               <OrderStatusRefresh />
+
+              <div className="pt-2 text-center space-y-2">
+                <Link href={`/checkout/${orderData.productId}`}>
+                  <Button variant="outline" className="w-full text-slate-700 border-slate-300">
+                    🔄 Beli Ulang / Coba Metode Lain
+                  </Button>
+                </Link>
+                {creatorUsername && (
+                  <Link href={`/${creatorUsername}`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-slate-500 hover:text-slate-800"
+                    >
+                      ← Kembali ke Profil {creatorName}
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}

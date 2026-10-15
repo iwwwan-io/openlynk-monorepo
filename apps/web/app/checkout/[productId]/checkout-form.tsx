@@ -52,11 +52,40 @@ export function CheckoutForm({ product, creator, clientKey, snapScriptUrl }: Che
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [activeSnapToken, setActiveSnapToken] = useState<string | null>(null);
+  const [activeAccessToken, setActiveAccessToken] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const triggerSnapPayment = (snapToken: string, accessToken: string) => {
+    if (typeof window !== "undefined" && window.snap) {
+      window.snap.pay(snapToken, {
+        onSuccess: () => {
+          router.push(`/order/${accessToken}`);
+        },
+        onPending: () => {
+          router.push(`/order/${accessToken}`);
+        },
+        onError: () => {
+          router.push(`/order/${accessToken}`);
+        },
+        onClose: () => {
+          setNotice(
+            "Jendela pembayaran ditutup sebelum transaksi diselesaikan. Anda dapat membuka kembali jendela pembayaran atau memeriksa status pesanan."
+          );
+          setActiveSnapToken(snapToken);
+          setActiveAccessToken(accessToken);
+        },
+      });
+    } else {
+      router.push(`/order/${accessToken}`);
+    }
+  };
 
   const handleCheckout = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setNotice(null);
 
     const formData = new FormData();
     formData.append("product_id", product.id);
@@ -74,26 +103,10 @@ export function CheckoutForm({ product, creator, clientKey, snapScriptUrl }: Che
       const accessToken = res.accessToken;
       const snapToken = res.snapToken;
 
-      // Buka popup pembayaran Midtrans Snap
-      if (typeof window !== "undefined" && window.snap) {
-        window.snap.pay(snapToken, {
-          onSuccess: () => {
-            router.push(`/order/${accessToken}`);
-          },
-          onPending: () => {
-            router.push(`/order/${accessToken}`);
-          },
-          onError: () => {
-            router.push(`/order/${accessToken}`);
-          },
-          onClose: () => {
-            router.push(`/order/${accessToken}`);
-          },
-        });
-      } else {
-        // Fallback jika script snap belum termuat
-        router.push(`/order/${accessToken}`);
-      }
+      setActiveSnapToken(snapToken);
+      setActiveAccessToken(accessToken);
+
+      triggerSnapPayment(snapToken, accessToken);
     });
   };
 
@@ -151,6 +164,32 @@ export function CheckoutForm({ product, creator, clientKey, snapScriptUrl }: Che
             {error && (
               <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
                 {error}
+              </div>
+            )}
+
+            {notice && activeSnapToken && activeAccessToken && (
+              <div className="mb-4 rounded-lg bg-amber-50 p-4 border border-amber-200 text-xs text-amber-900 space-y-3">
+                <p className="font-medium leading-relaxed">⚠️ {notice}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => triggerSnapPayment(activeSnapToken, activeAccessToken)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs"
+                  >
+                    Buka Kembali Pembayaran
+                  </Button>
+                  <Link href={`/order/${activeAccessToken}`}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto border-amber-300 bg-white text-amber-900 hover:bg-amber-100 text-xs"
+                    >
+                      Lihat Status Pesanan →
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
 

@@ -223,3 +223,16 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Idempotensi & Ketahanan Webhook:** Midtrans dapat mengirimkan notifikasi berulang untuk transaksi yang sama atau mengirimkan notifikasi dalam urutan yang tertukar. Memblokir penurunan status dari `paid` ke status non-paid menjamin hak akses pembeli tidak pernah hilang akibat anomali transmisi jaringan.
   - **Dua Lapis Isolasi Data Aset Digital:** Tautan produk digital (`delivery_url`) dilindungi di dua titik: (1) tidak pernah disertakan dalam query publik `/[username]` maupun formulir `/checkout/[productId]`, dan (2) pada halaman `/order/[accessToken]`, URL pengiriman hanya diambil dari database apabila status transaksi di database telah diverifikasi `paid`.
   - **Integritas Relasi Basis Data:** Penggunaan relasi `onDelete: 'restrict'` pada tabel pesanan mencegah skenario di mana seorang kreator menghapus produk yang telah dibayar pembeli, menjamin audit trail transaksi dan akses unduhan pembeli tetap terjaga.
+
+---
+
+## 14. Reverse Session Guard (Guest Guard) pada Route Group (auth) dan Resiliensi Sinkronisasi Midtrans API
+
+- **Keputusan:**
+  - Mengimplementasikan layout `apps/web/app/(auth)/layout.tsx` sebagai _reverse session guard_ (guest guard) menggunakan `auth.api.getSession()` dan `isSessionAuthorized()`. Jika pengunjung yang sudah memiliki sesi login aktif membuka rute `/login` atau `/register`, server langsung mengarahkan mereka ke `/dashboard`.
+  - Mengimplementasikan fungsi pembantu `fetchMidtransOrderStatus` pada `apps/web/lib/midtrans.ts` yang memanggil Midtrans Status API v2 secara langsung di sisi server saat halaman `/order/[accessToken]` dibuka atau tombol muat ulang status ditekan jika status pesanan masih `pending`.
+  - Memperbaiki alur penutupan popup Snap (`onClose`) pada `apps/web/app/checkout/[productId]/checkout-form.tsx` agar tidak langsung melempar pengguna ke halaman status pesanan, melainkan mempertahankan mereka pada formulir dengan opsi untuk membuka kembali pembayaran.
+  - Menambahkan navigasi kembali ke halaman profil dan pembelian ulang pada kartu status `pending` di `apps/web/app/order/[accessToken]/page.tsx`.
+- **Rasional:**
+  - **Integritas Pengalaman Pengguna (UX):** Pengguna yang sudah terotentikasi tidak memerlukan formulir masuk atau daftar akun. Mengarahkan mereka langsung ke dashboard mencegah kebingungan dan redundansi alur kerja.
+  - **Ketahanan Status Transaksi (Zero Stuck Payment):** Webhook jaringan dapat mengalami keterlambatan atau tidak terkirim akibat kendala jaringan atau ketiadaan konfigurasi notifikasi URL di dashboard gateway. Sinkronisasi aktif berbasis server component memastikan pembeli yang telah menyelesaikan pembayaran (atau yang pesanannya kedaluwarsa) langsung memperoleh status akurat tanpa hambatan.

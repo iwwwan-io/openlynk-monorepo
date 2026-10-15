@@ -213,3 +213,50 @@ export function getMidtransConfig() {
     snapScriptUrl,
   };
 }
+
+/**
+ * Mengambil status transaksi langsung dari Midtrans Status API v2
+ */
+export async function fetchMidtransOrderStatus(orderId: string): Promise<{
+  status: OrderStatus | null;
+  grossAmount: number | null;
+} | null> {
+  const { serverKey, isProduction } = getMidtransConfig();
+  if (!serverKey || !orderId) return null;
+
+  const baseUrl = isProduction ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
+
+  try {
+    const authHeader = "Basic " + Buffer.from(`${serverKey}:`).toString("base64");
+    const response = await fetch(`${baseUrl}/v2/${encodeURIComponent(orderId)}/status`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: authHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      transaction_status?: string;
+      fraud_status?: string;
+      gross_amount?: string | number;
+    };
+
+    const status =
+      typeof data.transaction_status === "string"
+        ? mapMidtransStatus(data.transaction_status, data.fraud_status)
+        : null;
+
+    const grossAmount = parseMidtransAmount(data.gross_amount);
+
+    return { status, grossAmount };
+  } catch (err) {
+    console.error("[fetchMidtransOrderStatus Error]", err);
+    return null;
+  }
+}

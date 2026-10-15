@@ -31,10 +31,17 @@ if (process.argv[1]?.endsWith("next-runner.mjs")) {
   const [command = "build", ...userArgs] = process.argv.slice(2);
   const { args } = resolveNextArgs(command, userArgs);
 
+  const isWindows = process.platform === "win32";
   const result = spawnSync("next", args, {
     stdio: "inherit",
     env: process.env,
+    shell: isWindows,
   });
+
+  if (result.error) {
+    console.error(result.error);
+    process.exit(1);
+  }
 
   process.exit(result.status ?? 0);
 }
