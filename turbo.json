@@ -7,7 +7,10 @@
     "BETTER_AUTH_URL",
     "NEXT_PUBLIC_APP_URL",
     "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET"
+    "GOOGLE_CLIENT_SECRET",
+    "MIDTRANS_SERVER_KEY",
+    "MIDTRANS_CLIENT_KEY",
+    "MIDTRANS_IS_PRODUCTION"
   ],
   "tasks": {
     "build": {
@@ -20,7 +23,10 @@
         "BETTER_AUTH_URL",
         "NEXT_PUBLIC_APP_URL",
         "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET"
+        "GOOGLE_CLIENT_SECRET",
+        "MIDTRANS_SERVER_KEY",
+        "MIDTRANS_CLIENT_KEY",
+        "MIDTRANS_IS_PRODUCTION"
       ]
     },
     "@openlynk/web#build": {
@@ -33,7 +39,10 @@
         "BETTER_AUTH_URL",
         "NEXT_PUBLIC_APP_URL",
         "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET"
+        "GOOGLE_CLIENT_SECRET",
+        "MIDTRANS_SERVER_KEY",
+        "MIDTRANS_CLIENT_KEY",
+        "MIDTRANS_IS_PRODUCTION"
       ]
     },
     "typecheck": {

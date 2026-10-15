@@ -68,6 +68,9 @@ Buka file `.env.local` dan pastikan variabel-variabel wajib berikut terisi:
 - `NEXT_PUBLIC_APP_URL`: URL basis aplikasi untuk `metadataBase`, `robots.txt`, dan `sitemap.xml` (`http://localhost:3000` untuk lokal).
 - `GOOGLE_CLIENT_ID`: (Opsional) Google OAuth 2.0 Client ID. Jika kosong, tombol "Lanjutkan dengan Google" disembunyikan.
 - `GOOGLE_CLIENT_SECRET`: (Opsional) Google OAuth 2.0 Client Secret.
+- `MIDTRANS_SERVER_KEY`: Server Key dari Midtrans Dashboard (sandbox: `SB-Mid-server-...` atau produksi: `Mid-server-...`). Digunakan untuk otorisasi Snap API dan verifikasi signature webhook di server.
+- `MIDTRANS_CLIENT_KEY`: Client Key dari Midtrans Dashboard (sandbox: `SB-Mid-client-...` atau produksi: `Mid-client-...`). Digunakan oleh browser untuk memuat Snap.js.
+- `MIDTRANS_IS_PRODUCTION`: `false` untuk lingkungan Midtrans Sandbox, `true` untuk produksi live.
 
 ### Instalasi & Menjalankan Aplikasi
 
@@ -119,15 +122,18 @@ Saat mengimpor repositori ke Vercel Dashboard:
 
 Tambahkan seluruh variabel environment berikut pada menu **Settings > Environment Variables**:
 
-| Variable               | Keterangan & Contoh Nilai                                                                                              |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`         | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
-| `DATABASE_URL_DIRECT`  | (Opsional) Connection string PostgreSQL direct (port 5432 non-pooled) jika diperlukan untuk DDL.                       |
-| `BETTER_AUTH_SECRET`   | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
-| `BETTER_AUTH_URL`      | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
-| `NEXT_PUBLIC_APP_URL`  | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
-| `GOOGLE_CLIENT_ID`     | (Opsional) Google OAuth 2.0 Client ID. Tombol Google otomatis disembunyikan jika tidak diisi.                          |
-| `GOOGLE_CLIENT_SECRET` | (Opsional) Google OAuth 2.0 Client Secret.                                                                             |
+| Variable                 | Keterangan & Contoh Nilai                                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | Connection string PostgreSQL pooled (misal transaksi port 6543 / pooler). Driver runtime menggunakan `prepare: false`. |
+| `DATABASE_URL_DIRECT`    | (Opsional) Connection string PostgreSQL direct (port 5432 non-pooled) jika diperlukan untuk DDL.                       |
+| `BETTER_AUTH_SECRET`     | Kunci rahasia Better Auth (string acak minimal 32 karakter).                                                           |
+| `BETTER_AUTH_URL`        | Domain produksi lengkap, contoh: `https://openlynk.id`                                                                 |
+| `NEXT_PUBLIC_APP_URL`    | Domain produksi lengkap, contoh: `https://openlynk.id` (digunakan oleh OpenGraph, `robots.txt`, dan `sitemap.xml`).    |
+| `GOOGLE_CLIENT_ID`       | (Opsional) Google OAuth 2.0 Client ID. Tombol Google otomatis disembunyikan jika tidak diisi.                          |
+| `GOOGLE_CLIENT_SECRET`   | (Opsional) Google OAuth 2.0 Client Secret.                                                                             |
+| `MIDTRANS_SERVER_KEY`    | Server Key dari dashboard Midtrans (`SB-Mid-server-...` untuk sandbox atau `Mid-server-...` untuk produksi).           |
+| `MIDTRANS_CLIENT_KEY`    | Client Key dari dashboard Midtrans (`SB-Mid-client-...` untuk sandbox atau `Mid-client-...` untuk produksi).           |
+| `MIDTRANS_IS_PRODUCTION` | Nilai boolean (`false` untuk Sandbox, `true` untuk Produksi).                                                          |
 
 ### 3. Migrasi Database Sebelum Deploy
 
@@ -176,6 +182,49 @@ Untuk mengaktifkan Google OAuth:
 
 ---
 
+## Langkah Setup Midtrans Snap & Webhook Notification
+
+Openlynk mengintegrasikan pembayaran produk digital menggunakan Midtrans Snap secara seamless. Pengunjung dapat melakukan checkout langsung dari profil kreator tanpa perlu membuat akun pembeli.
+
+### 1. Buat Akun & Dapatkan Kredensial Midtrans
+
+1. Kunjungi [Midtrans Dashboard Sandbox](https://dashboard.sandbox.midtrans.com/) (atau Dashboard Production untuk live).
+2. Navigasi ke menu **Settings > Access Keys**.
+3. Salin **Server Key** dan **Client Key**.
+4. Masukkan ke file `.env.local`:
+   ```bash
+   MIDTRANS_SERVER_KEY="SB-Mid-server-xxxxxxxxxxxx"
+   MIDTRANS_CLIENT_KEY="SB-Mid-client-xxxxxxxxxxxx"
+   MIDTRANS_IS_PRODUCTION=false
+   ```
+
+### 2. Konfigurasi Payment Notification URL (Webhook)
+
+Webhook diperlukan agar status transaksi (settlement, expire, cancel, deny) dapat diverifikasi dan diperbarui secara otomatis di database Openlynk.
+
+1. Pada Dashboard Midtrans, navigasi ke **Settings > Configuration**.
+2. Cari bagian **Payment Notification URL** (atau **Notification URL**).
+3. Masukkan URL endpoint webhook Openlynk:
+   ```text
+   https://<domain-anda>/api/webhooks/midtrans
+   ```
+   _Contoh untuk produksi:_ `https://openlynk.id/api/webhooks/midtrans`
+   _Pengembangan lokal:_ Gunakan reverse tunnel seperti Ngrok atau Cloudflare Tunnel (contoh: `https://xxxx.ngrok-free.app/api/webhooks/midtrans`).
+4. Pastikan opsi **Append to Notification URL** dinonaktifkan (atau disesuaikan).
+5. Klik **Save Changes** di bagian bawah halaman.
+
+### 3. Pengujian Transaksi di Lingkungan Sandbox
+
+1. Buat produk digital di dashboard kreator `/dashboard/products`.
+2. Buka profil publik kreator `/[username]`.
+3. Klik tombol **"Beli"** pada produk untuk membuka formulir checkout `/checkout/[productId]`.
+4. Masukkan nama dan email pembeli, lalu klik **"Lanjut ke Pembayaran"**.
+5. Pop-up Midtrans Snap akan terbuka. Pilih metode simulasi (contoh: QRIS, BCA VA, GoPay).
+6. Gunakan [Midtrans Payment Simulator](https://simulator.sandbox.midtrans.com/) untuk menyelesaikan pembayaran dengan kode virtual account atau QRIS yang muncul.
+7. Setelah webhook berhasil diverifikasi (status `paid`), pembeli dapat langsung melihat dan membuka `delivery_url` produk pada halaman `/order/[accessToken]`.
+
+---
+
 ## Dokumentasi Arsitektur
 
-Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, Google OAuth social provider, pnpm workspaces, penanganan connection pooler (`prepare: false`), serta Route Metadata (`robots.txt` dan `sitemap.xml`).
+Lihat [DECISIONS.md](docs/DECISIONS.md) untuk detail keputusan teknis mengenai AGPL-3.0, Next.js App Router, Drizzle ORM, Better Auth, Google OAuth social provider, pnpm workspaces, penanganan connection pooler (`prepare: false`), Route Metadata (`robots.txt` dan `sitemap.xml`), model produk digital, serta integrasi checkout Midtrans Snap.
