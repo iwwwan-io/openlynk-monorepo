@@ -35,6 +35,9 @@ describe("robots.ts route metadata", () => {
     expect(rules?.allow).toBe("/");
     expect(rules?.disallow).toContain("/dashboard");
     expect(rules?.disallow).toContain("/api/");
+    expect(rules?.disallow).toContain("/checkout");
+    expect(rules?.disallow).toContain("/order");
+    expect(rules?.disallow).toContain("/api/webhooks");
   });
 });
 
