@@ -192,16 +192,16 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
                       </p>
                     )}
                     <div className="mt-2 flex justify-end">
-                      <Button
-                        type="button"
-                        disabled
-                        size="sm"
-                        variant="outline"
-                        className="w-full sm:w-auto text-xs opacity-75 cursor-not-allowed border-slate-300 bg-slate-100 text-slate-600"
-                      >
-                        Segera hadir
-                      </Button>
+                      <Link href={`/checkout/${prod.id}`} className="w-full sm:w-auto">
+                        <Button
+                          size="sm"
+                          className="w-full sm:w-auto text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Beli
+                        </Button>
+                      </Link>
                     </div>
+
                   </div>
                 </Card>
               ))}
