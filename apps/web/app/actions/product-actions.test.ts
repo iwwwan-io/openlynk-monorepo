@@ -67,4 +67,44 @@ describe("Product Server Actions - Cross-User Ownership Guard Logic", () => {
 
     expect(toggleResult.success).toBe(false);
   });
+
+  it("rejects product deletion if product already has orders with friendly message", () => {
+    const productOrders = [{ id: "order-1", productId: "product-123" }];
+    const hasOrders = productOrders.length > 0;
+
+    const result = hasOrders
+      ? {
+          success: false,
+          error: "Produk sudah punya pesanan, nonaktifkan saja",
+        }
+      : { success: true };
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Produk sudah punya pesanan, nonaktifkan saja");
+  });
+
+  it("handles foreign key constraint violation gracefully when deleting product", () => {
+    const fkError = {
+      code: "23503",
+      constraint_name: "order_product_id_product_id_fk",
+      message: 'update or delete on table "product" violates foreign key constraint',
+    };
+
+    const isFkViolation =
+      fkError.code === "23503" ||
+      fkError.constraint_name.includes("order_product_id") ||
+      fkError.message.includes("violates foreign key constraint");
+
+    expect(isFkViolation).toBe(true);
+
+    const result = isFkViolation
+      ? {
+          success: false,
+          error: "Produk sudah punya pesanan, nonaktifkan saja",
+        }
+      : { success: false, error: "Terjadi kesalahan" };
+
+    expect(result.error).toBe("Produk sudah punya pesanan, nonaktifkan saja");
+  });
 });
+

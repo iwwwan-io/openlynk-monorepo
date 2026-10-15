@@ -8,7 +8,8 @@ import {
   validateProductTitle,
 } from "@/lib/product-validation";
 import { auth } from "@openlynk/auth";
-import { and, asc, eq, getDb, product, profile } from "@openlynk/db";
+import { and, asc, eq, getDb, order, product, profile } from "@openlynk/db";
+
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -255,6 +256,20 @@ export async function deleteProductAction(
       };
     }
 
+    // Cek apakah produk sudah memiliki pesanan (order)
+    const [existingOrder] = await db
+      .select({ id: order.id })
+      .from(order)
+      .where(eq(order.productId, productId))
+      .limit(1);
+
+    if (existingOrder) {
+      return {
+        success: false,
+        error: "Produk sudah punya pesanan, nonaktifkan saja",
+      };
+    }
+
     await db.delete(product).where(eq(product.id, productId));
 
     revalidatePath("/dashboard");
@@ -262,9 +277,22 @@ export async function deleteProductAction(
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      (("code" in err && err.code === "23503") ||
+        ("constraint_name" in err && String(err.constraint_name).includes("order_product_id")) ||
+        ("message" in err && String(err.message).includes("violates foreign key constraint")))
+    ) {
+      return {
+        success: false,
+        error: "Produk sudah punya pesanan, nonaktifkan saja",
+      };
+    }
     return handleActionError(err, "Terjadi kesalahan saat menghapus produk digital");
   }
 }
+
 
 /**
  * Toggle status aktif/nonaktif produk digital.
