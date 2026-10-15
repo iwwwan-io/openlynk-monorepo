@@ -22,6 +22,13 @@
       "when": 1792028254136,
       "tag": "0002_aspiring_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792037985798,
+      "tag": "0003_naive_christian_walker",
+      "breakpoints": true
     }
   ]
 }

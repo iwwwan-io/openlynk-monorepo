@@ -4,6 +4,7 @@ import {
   account,
   createDbClient,
   link,
+  order,
   product,
   profile,
   session,
@@ -20,7 +21,9 @@ describe("Database schema", () => {
     expect(getTableName(profile)).toBe("profile");
     expect(getTableName(link)).toBe("link");
     expect(getTableName(product)).toBe("product");
+    expect(getTableName(order)).toBe("order");
   });
+
 
   it("verifies user table structure", () => {
     expect(user.id).toBeDefined();
@@ -90,7 +93,23 @@ describe("Database schema", () => {
     expect(product.updatedAt).toBeDefined();
   });
 
+  it("verifies order table structure", () => {
+    expect(order.id).toBeDefined();
+    expect(order.productId).toBeDefined();
+    expect(order.buyerName).toBeDefined();
+    expect(order.buyerEmail).toBeDefined();
+    expect(order.productTitle).toBeDefined();
+    expect(order.amountIdr).toBeDefined();
+    expect(order.status).toBeDefined();
+    expect(order.midtransOrderId).toBeDefined();
+    expect(order.accessToken).toBeDefined();
+    expect(order.paidAt).toBeDefined();
+    expect(order.createdAt).toBeDefined();
+    expect(order.updatedAt).toBeDefined();
+  });
+
   it("exports createDbClient factory function and accepts options", () => {
+
     expect(typeof createDbClient).toBe("function");
     const testClient = createDbClient("postgresql://postgres:postgres@localhost:5432/test", {
       prepare: false,

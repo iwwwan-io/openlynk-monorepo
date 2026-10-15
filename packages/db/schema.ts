@@ -117,6 +117,34 @@ export const product = pgTable(
   (table) => [index("product_profile_position_idx").on(table.profileId, table.position)]
 );
 
+export const order = pgTable(
+  "order",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "restrict" }),
+    buyerName: text("buyer_name").notNull(),
+    buyerEmail: text("buyer_email").notNull(),
+    productTitle: text("product_title").notNull(),
+    amountIdr: integer("amount_idr").notNull(),
+    status: text("status").notNull().default("pending"),
+    midtransOrderId: text("midtrans_order_id").notNull().unique(),
+    accessToken: text("access_token").notNull().unique(),
+    paidAt: timestamp("paid_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("order_product_id_idx").on(table.productId),
+    index("order_status_idx").on(table.status),
+  ]
+);
+
+export type OrderStatus = "pending" | "paid" | "expired" | "failed";
+
 export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
 
@@ -137,3 +165,7 @@ export type NewLink = typeof link.$inferInsert;
 
 export type Product = typeof product.$inferSelect;
 export type NewProduct = typeof product.$inferInsert;
+
+export type Order = typeof order.$inferSelect;
+export type NewOrder = typeof order.$inferInsert;
+
