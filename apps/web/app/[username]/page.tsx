@@ -1,4 +1,5 @@
 import { and, asc, eq, getDb, link, profile } from "@openlynk/db";
+import { Badge, Card } from "@openlynk/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -113,9 +114,11 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
             {userProfile.displayName}
           </h1>
-          <p className="mt-0.5 text-xs font-mono font-medium text-slate-500">
-            @{userProfile.username}
-          </p>
+          <div className="mt-1 flex justify-center">
+            <Badge variant="secondary" className="font-mono text-xs">
+              @{userProfile.username}
+            </Badge>
+          </div>
           {userProfile.bio && (
             <p className="mt-3 max-w-xs text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
               {userProfile.bio}
@@ -126,9 +129,9 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
         {/* Daftar Tautan Aktif */}
         <section className="mt-8 w-full space-y-3.5">
           {activeLinks.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-white/60 p-6 text-center text-sm text-slate-500">
+            <Card className="border-dashed bg-white/60 p-6 text-center text-sm text-slate-500 shadow-none">
               Belum ada tautan yang dibagikan saat ini.
-            </div>
+            </Card>
           ) : (
             activeLinks.map((item) => (
               <a
@@ -136,11 +139,13 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-center font-medium text-slate-800 shadow-sm transition hover:border-blue-400 hover:bg-slate-50 hover:shadow active:scale-[0.99]"
+                className="group block w-full"
               >
-                <span className="truncate text-sm sm:text-base font-semibold group-hover:text-blue-600 transition-colors">
-                  {item.title}
-                </span>
+                <Card className="flex w-full items-center justify-center p-3.5 text-center transition hover:border-blue-400 hover:bg-slate-50 hover:shadow active:scale-[0.99]">
+                  <span className="truncate text-sm sm:text-base font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                    {item.title}
+                  </span>
+                </Card>
               </a>
             ))
           )}

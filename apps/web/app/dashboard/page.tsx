@@ -5,6 +5,7 @@ import { ProfileForm } from "@/app/dashboard/profile-form";
 import { isSessionAuthorized } from "@/lib/auth-validation";
 import { auth } from "@openlynk/auth";
 import { asc, eq, getDb, link, profile } from "@openlynk/db";
+import { Badge, Button } from "@openlynk/ui";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -36,12 +37,14 @@ export default async function DashboardPage() {
               <h1 className="text-xl font-bold text-slate-900">Halo, {user.name}!</h1>
             </div>
             <form action={logoutAction}>
-              <button
+              <Button
                 type="submit"
-                className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition"
+                variant="outline"
+                size="sm"
+                className="border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
               >
                 Keluar
-              </button>
+              </Button>
             </form>
           </header>
 
@@ -65,9 +68,9 @@ export default async function DashboardPage() {
         <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
                 Profil Aktif
-              </span>
+              </Badge>
               <span className="text-xs font-mono text-slate-500">@{userProfile.username}</span>
             </div>
             <h1 className="mt-2 text-2xl font-bold text-slate-900">Dashboard Kreator</h1>
@@ -78,23 +81,26 @@ export default async function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/${userProfile.username}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-            >
-              <span>Lihat Halaman Publik</span>
-              <span>↗</span>
+            <Link href={`/${userProfile.username}`} target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              >
+                <span>Lihat Halaman Publik</span>
+                <span>↗</span>
+              </Button>
             </Link>
 
             <form action={logoutAction}>
-              <button
+              <Button
                 type="submit"
-                className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-medium text-red-700 hover:bg-red-100 transition"
+                variant="outline"
+                size="sm"
+                className="border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
               >
                 Keluar
-              </button>
+              </Button>
             </form>
           </div>
         </header>

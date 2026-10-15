@@ -7,6 +7,17 @@ import {
   toggleLinkActiveAction,
   updateLinkAction,
 } from "@/app/actions/link";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@openlynk/ui";
 import { useState, useTransition } from "react";
 
 interface LinkItemData {
@@ -122,224 +133,238 @@ export function LinkManager({ initialLinks }: LinkManagerProps) {
   return (
     <div className="space-y-6">
       {/* Form Tambah Tautan */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900">Tambah Tautan Baru</h2>
-        <p className="text-xs text-slate-500">
-          Tautan akan langsung muncul di halaman publik bio Anda.
-        </p>
+      <Card className="bg-white shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-slate-900">Tambah Tautan Baru</CardTitle>
+          <CardDescription className="text-xs text-slate-500">
+            Tautan akan langsung muncul di halaman publik bio Anda.
+          </CardDescription>
+        </CardHeader>
 
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleAddLink} className="mt-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="newTitle"
-                className="block text-xs font-semibold uppercase tracking-wider text-slate-600"
-              >
-                Judul Tautan
-              </label>
-              <input
-                id="newTitle"
-                type="text"
-                required
-                maxLength={100}
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Misal: Instagram Official / Portofolio"
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+        <CardContent>
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+              {error}
             </div>
-            <div>
-              <label
-                htmlFor="newUrl"
-                className="block text-xs font-semibold uppercase tracking-wider text-slate-600"
-              >
-                URL Tujuan (http:// atau https://)
-              </label>
-              <input
-                id="newUrl"
-                type="url"
-                required
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                placeholder="https://instagram.com/akun"
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition"
-          >
-            {isPending ? "Menambahkan..." : "+ Tambah Tautan"}
-          </button>
-        </form>
-      </div>
+          <form onSubmit={handleAddLink} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="newTitle"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-600"
+                >
+                  Judul Tautan
+                </Label>
+                <Input
+                  id="newTitle"
+                  type="text"
+                  required
+                  maxLength={100}
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Misal: Instagram Official / Portofolio"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="newUrl"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-600"
+                >
+                  URL Tujuan (http:// atau https://)
+                </Label>
+                <Input
+                  id="newUrl"
+                  type="url"
+                  required
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  placeholder="https://instagram.com/akun"
+                />
+              </div>
+            </div>
+
+            <Button type="submit" disabled={isPending} className="font-semibold">
+              {isPending ? "Menambahkan..." : "+ Tambah Tautan"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Daftar Tautan */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      <Card className="bg-white shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Kelola Daftar Tautan</h2>
-            <p className="text-xs text-slate-500">
+            <CardTitle className="text-lg font-bold text-slate-900">Kelola Daftar Tautan</CardTitle>
+            <CardDescription className="text-xs text-slate-500">
               Ubah urutan tautan menggunakan tombol naik/turun atau nonaktifkan tautan sementara.
-            </p>
+            </CardDescription>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          <Badge variant="secondary" className="font-semibold">
             {initialLinks.length} Tautan
-          </span>
-        </div>
+          </Badge>
+        </CardHeader>
 
-        {initialLinks.length === 0 ? (
-          <div className="mt-8 text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
-            <p className="text-sm font-medium text-slate-600">Belum ada tautan yang ditambahkan.</p>
-            <p className="mt-1 text-xs text-slate-400">
-              Gunakan formulir di atas untuk menambahkan tautan pertama Anda.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {initialLinks.map((item, index) => (
-              <div
-                key={item.id}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 transition ${
-                  item.isActive
-                    ? "border-slate-200 bg-white"
-                    : "border-slate-200 bg-slate-50 opacity-70"
-                }`}
-              >
-                {editingId === item.id ? (
-                  <form
-                    onSubmit={handleSaveEdit}
-                    className="flex-1 space-y-3 sm:space-y-0 sm:flex sm:gap-3"
-                  >
-                    <input
-                      type="text"
-                      required
-                      maxLength={100}
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-                      placeholder="Judul tautan"
-                    />
-                    <input
-                      type="url"
-                      required
-                      value={editUrl}
-                      onChange={(e) => setEditUrl(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-                      placeholder="https://..."
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={isPending}
-                        className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(null)}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-slate-900 truncate">
-                          {item.title}
-                        </span>
-                        {!item.isActive && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                            Nonaktif
+        <CardContent className="pt-4">
+          {initialLinks.length === 0 ? (
+            <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
+              <p className="text-sm font-medium text-slate-600">
+                Belum ada tautan yang ditambahkan.
+              </p>
+              <p className="mt-1 text-xs text-slate-400">
+                Gunakan formulir di atas untuk menambahkan tautan pertama Anda.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {initialLinks.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 transition ${
+                    item.isActive
+                      ? "border-slate-200 bg-white"
+                      : "border-slate-200 bg-slate-50 opacity-70"
+                  }`}
+                >
+                  {editingId === item.id ? (
+                    <form
+                      onSubmit={handleSaveEdit}
+                      className="flex-1 space-y-3 sm:space-y-0 sm:flex sm:gap-3"
+                    >
+                      <Input
+                        type="text"
+                        required
+                        maxLength={100}
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="flex-1"
+                        placeholder="Judul tautan"
+                      />
+                      <Input
+                        type="url"
+                        required
+                        value={editUrl}
+                        onChange={(e) => setEditUrl(e.target.value)}
+                        className="flex-1"
+                        placeholder="https://..."
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="submit"
+                          disabled={isPending}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+                        >
+                          Simpan
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingId(null)}
+                          className="font-semibold text-slate-700"
+                        >
+                          Batal
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-slate-900 truncate">
+                            {item.title}
                           </span>
-                        )}
-                      </div>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-0.5 block truncate text-xs text-blue-600 hover:underline"
-                      >
-                        {item.url}
-                      </a>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      {/* Tombol Reorder Naik & Turun */}
-                      <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-                        <button
-                          type="button"
-                          disabled={isPending || index === 0}
-                          onClick={() => handleReorder(item.id, "up")}
-                          aria-label="Pindahkan ke atas"
-                          className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                          {!item.isActive && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-100 text-amber-800 border-amber-200 text-[10px]"
+                            >
+                              Nonaktif
+                            </Badge>
+                          )}
+                        </div>
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-0.5 block truncate text-xs text-blue-600 hover:underline"
                         >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isPending || index === initialLinks.length - 1}
-                          onClick={() => handleReorder(item.id, "down")}
-                          aria-label="Pindahkan ke bawah"
-                          className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
-                        >
-                          ▼
-                        </button>
+                          {item.url}
+                        </a>
                       </div>
 
-                      {/* Tombol Toggle Aktif/Nonaktif */}
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => handleToggleActive(item.id)}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium border transition ${
-                          item.isActive
-                            ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
-                            : "border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {item.isActive ? "Aktif" : "Nonaktif"}
-                      </button>
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        {/* Tombol Reorder Naik & Turun */}
+                        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                          <button
+                            type="button"
+                            disabled={isPending || index === 0}
+                            onClick={() => handleReorder(item.id, "up")}
+                            aria-label="Pindahkan ke atas"
+                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isPending || index === initialLinks.length - 1}
+                            onClick={() => handleReorder(item.id, "down")}
+                            aria-label="Pindahkan ke bawah"
+                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                          >
+                            ▼
+                          </button>
+                        </div>
 
-                      {/* Tombol Edit */}
-                      <button
-                        type="button"
-                        onClick={() => startEdit(item)}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Edit
-                      </button>
+                        {/* Tombol Toggle Aktif/Nonaktif */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isPending}
+                          onClick={() => handleToggleActive(item.id)}
+                          className={
+                            item.isActive
+                              ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+                              : "border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }
+                        >
+                          {item.isActive ? "Aktif" : "Nonaktif"}
+                        </Button>
 
-                      {/* Tombol Hapus */}
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => handleDelete(item.id, item.title)}
-                        className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                        {/* Tombol Edit */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => startEdit(item)}
+                          className="text-slate-700"
+                        >
+                          Edit
+                        </Button>
+
+                        {/* Tombol Hapus */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isPending}
+                          onClick={() => handleDelete(item.id, item.title)}
+                          className="border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                        >
+                          Hapus
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
