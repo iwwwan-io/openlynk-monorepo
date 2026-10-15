@@ -100,6 +100,7 @@ export async function createLinkAction(
     });
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/links");
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
@@ -162,6 +163,7 @@ export async function updateLinkAction(
       .where(eq(link.id, linkId));
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/links");
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
@@ -204,6 +206,7 @@ export async function deleteLinkAction(
     await db.delete(link).where(eq(link.id, linkId));
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/links");
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
@@ -252,6 +255,7 @@ export async function toggleLinkActiveAction(
       .where(eq(link.id, linkId));
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/links");
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {
@@ -359,6 +363,7 @@ export async function reorderLinkAction(
     }
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/links");
     revalidatePath(`/${userProfile.username}`);
     return { success: true };
   } catch (err: unknown) {

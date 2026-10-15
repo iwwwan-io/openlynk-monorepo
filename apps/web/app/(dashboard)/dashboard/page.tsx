@@ -1,14 +1,14 @@
 import { logoutAction } from "@/app/actions/auth";
-import { LinkManager } from "./link-manager";
 import { OnboardingForm } from "./onboarding-form";
 import { ProfileForm } from "./profile-form";
 import { isSessionAuthorized } from "@/lib/auth-validation";
 import { auth } from "@openlynk/auth";
-import { asc, eq, getDb, link, profile } from "@openlynk/db";
-import { Badge, Button } from "@openlynk/ui";
+import { eq, getDb, link, product, profile } from "@openlynk/db";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@openlynk/ui";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import React from "react";
 
 export default async function DashboardPage() {
   const reqHeaders = await headers();
@@ -24,7 +24,11 @@ export default async function DashboardPage() {
   const db = getDb();
 
   // Ambil profil kreator milik user yang sedang aktif
-  const [userProfile] = await db.select().from(profile).where(eq(profile.userId, user.id)).limit(1);
+  const [userProfile] = await db
+    .select()
+    .from(profile)
+    .where(eq(profile.userId, user.id))
+    .limit(1);
 
   // Jika belum memiliki profil, tampilkan formulir onboarding
   if (!userProfile) {
@@ -54,12 +58,19 @@ export default async function DashboardPage() {
     );
   }
 
-  // Jika profil sudah ada, ambil semua tautan milik profil ini
+  // Ambil ringkasan data tautan dan produk milik kreator
   const userLinks = await db
-    .select()
+    .select({ id: link.id, isActive: link.isActive })
     .from(link)
-    .where(eq(link.profileId, userProfile.id))
-    .orderBy(asc(link.position), asc(link.createdAt));
+    .where(eq(link.profileId, userProfile.id));
+
+  const userProducts = await db
+    .select({ id: product.id, isActive: product.isActive })
+    .from(product)
+    .where(eq(product.profileId, userProfile.id));
+
+  const activeLinksCount = userLinks.filter((l) => l.isActive).length;
+  const activeProductsCount = userProducts.filter((p) => p.isActive).length;
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-10">
@@ -73,7 +84,7 @@ export default async function DashboardPage() {
               </Badge>
               <span className="text-xs font-mono text-slate-500">@{userProfile.username}</span>
             </div>
-            <h1 className="mt-2 text-2xl font-bold text-slate-900">Dashboard Kreator</h1>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">Ringkasan & Profil Kreator</h1>
             <p className="text-sm text-slate-600">
               Selamat datang kembali,{" "}
               <span className="font-semibold text-slate-900">{userProfile.displayName}</span>!
@@ -105,6 +116,57 @@ export default async function DashboardPage() {
           </div>
         </header>
 
+        {/* Kartu Ringkasan Statistik */}
+        <section className="grid gap-4 sm:grid-cols-2">
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="pb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Tautan Bio
+              </span>
+              <CardTitle className="text-2xl font-bold text-slate-900">
+                {userLinks.length}{" "}
+                <span className="text-xs font-normal text-slate-500">
+                  ({activeLinksCount} aktif)
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-slate-500 mb-3">
+                Tautan eksternal yang ditampilkan di halaman bio kreator Anda.
+              </p>
+              <Link href="/dashboard/links">
+                <Button variant="outline" size="sm" className="w-full text-xs font-medium">
+                  Kelola Tautan ↗
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white shadow-sm border-slate-200">
+            <CardHeader className="pb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Produk Digital
+              </span>
+              <CardTitle className="text-2xl font-bold text-slate-900">
+                {userProducts.length}{" "}
+                <span className="text-xs font-normal text-slate-500">
+                  ({activeProductsCount} aktif)
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-slate-500 mb-3">
+                Katalog ebook, preset, atau template digital yang siap dijual.
+              </p>
+              <Link href="/dashboard/products">
+                <Button variant="outline" size="sm" className="w-full text-xs font-medium">
+                  Kelola Produk Digital ↗
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Pengaturan Profil Kreator */}
         <section>
           <ProfileForm
@@ -115,11 +177,6 @@ export default async function DashboardPage() {
               avatarUrl: userProfile.avatarUrl,
             }}
           />
-        </section>
-
-        {/* Manajemen Tautan (Link-in-Bio) */}
-        <section>
-          <LinkManager initialLinks={userLinks} />
         </section>
       </div>
     </main>

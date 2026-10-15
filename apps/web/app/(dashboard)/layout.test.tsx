@@ -16,7 +16,9 @@ vi.mock("next/navigation", () => ({
     mockRedirect(url);
     throw new Error(`REDIRECT:${url}`);
   },
+  usePathname: () => "/dashboard",
 }));
+
 
 vi.mock("@openlynk/auth", () => ({
   auth: {
@@ -80,6 +82,9 @@ describe("DashboardLayout Server Component", () => {
     expect(html).toContain("Lihat Halaman Publik");
     expect(html).toContain("/budikreator");
     expect(html).toContain("Keluar");
+    expect(html).toContain("Profil &amp; Ringkasan");
+    expect(html).toContain("Tautan");
+    expect(html).toContain("Produk Digital");
     expect(html).toContain("Halo Dashboard");
   });
 
@@ -101,7 +106,9 @@ describe("DashboardLayout Server Component", () => {
 
     expect(html).toContain("Openlynk");
     expect(html).not.toContain("Lihat Halaman Publik");
+    expect(html).not.toContain("Produk Digital");
     expect(html).toContain("Keluar");
     expect(html).toContain("Formulir Onboarding");
   });
 });
+

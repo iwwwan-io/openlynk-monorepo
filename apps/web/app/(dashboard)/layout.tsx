@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import React from "react";
+import { DashboardTabs } from "./dashboard/dashboard-tabs";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const reqHeaders = await headers();
@@ -64,8 +65,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </nav>
 
+      {/* Navigasi Tab Sub-route Dashboard */}
+      {userProfile?.username && <DashboardTabs />}
+
       {/* Konten Halaman */}
       <div className="flex-1">{children}</div>
     </div>
   );
 }
+
