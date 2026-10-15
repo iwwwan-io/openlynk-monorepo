@@ -172,3 +172,54 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Integritas Moneter Rupiah:** Penggunaan integer IDR mencegah distorsi pembulatan floating-point pada kalkulasi moneter dan selaras dengan standar transaksi Rupiah di Indonesia tanpa subunit sen.
   - **Zero Leakage Proteksi Aset Digital:** Tautan pengiriman (`delivery_url`) adalah aset privat yang hanya boleh diberikan kepada pembeli setelah pembayaran berhasil di tahap berikutnya. Menghilangkan kolom tersebut pada tingkat proyeksi SELECT database menjamin data sensitif tidak pernah menyentuh browser publik sebelum sistem verifikasi pesanan terpasang.
   - **Modularitas dan Skalabilitas Dashboard:** Memecah dashboard ke sub-route (`/dashboard`, `/dashboard/links`, `/dashboard/products`) merapikan hierarki aplikasi, meringankan render tree setiap halaman, serta mempersiapkan arsitektur navigasi yang bersih untuk fitur transaksi dan analitik di tahap selanjutnya.
+
+---
+
+## 13. Checkout Digital Midtrans Snap, Verifikasi Webhook Idempoten, dan Perlindungan Akses Pesanan (Tahap 7b)
+
+- **Keputusan:**
+  - Menambahkan tabel `order` pada `packages/db/schema.ts` secara additif dengan kolom:
+    - `id`: primary key `uuid` (`defaultRandom()`).
+    - `product_id`: foreign key ke `product.id` dengan relasi `onDelete: 'restrict'` untuk mencegah penghapusan produk yang memiliki riwayat pesanan.
+    - `buyer_name` (varchar 100) dan `buyer_email` (varchar 254).
+    - `product_title` (varchar 100, snapshot judul saat checkout) dan `amount_idr` (integer, snapshot harga saat checkout).
+    - `status`: enum status (`pending`, `paid`, `expired`, `failed`) dengan nilai bawaan `pending`.
+    - `midtrans_order_id`: string unik maksimal 50 karakter (format: `ORDER-${timestamp}-${randomHex}`) untuk referensi pembayaran di sistem Midtrans.
+    - `access_token`: token acak 32-byte kriptografis berformat `base64url` yang unik untuk akses halaman status dan pengiriman pesanan.
+    - `paid_at`: timestamp nullable yang dicatat saat status menjadi `paid`.
+    - `created_at` dan `updated_at`: timestamps.
+    - Indeks komposit/indeks terpisah: `order_product_id_idx` pada `product_id` dan `order_status_idx` pada `status`.
+  - Memperbarui `deleteProductAction` di `apps/web/app/actions/product.ts` agar memeriksa keberadaan pesanan sebelum menghapus, serta menangkap kode error Postgres `23503` (foreign key constraint violation) untuk mengembalikan pesan ramah kepada kreator: `"Produk sudah punya pesanan, nonaktifkan saja"`.
+  - Mengimplementasikan alur checkout tanpa akun pembeli:
+    - Rute `/checkout/[productId]` sebagai Server Component yang memvalidasi ketersediaan dan status aktif produk (mengembalikan `notFound()` jika tidak ditemukan atau nonaktif), serta memproyeksikan data produk tanpa memilih kolom `delivery_url`.
+    - Validasi server murni (`validateBuyerName`, `validateBuyerEmail`) untuk input formulir nama (2–100 karakter) dan email (format valid RFC 5322, maksimal 254 karakter).
+    - Server Action `createOrderAction`: Judul produk (`product_title`) dan harga (`amount_idr`) diambil secara eksklusif dari database melalui SELECT pada server, sama sekali tidak memercayai parameter harga atau judul dari input browser klien.
+    - Mengintegrasikan Midtrans Snap API (`POST /snap/v1/transactions`) dengan Basic Auth (`MIDTRANS_SERVER_KEY`), parameter `order_id`, `gross_amount`, `customer_details`, dan `item_details`. Jika panggilan API Midtrans gagal, pesanan ditandai sebagai status `failed` dan menampilkan pesan kesalahan yang ramah kepada pengguna.
+    - Integrasi Snap di browser klien: Memuat script `snap.js` (sandbox vs production berdasarkan `NEXT_PUBLIC_APP_URL` / env) menggunakan `MIDTRANS_CLIENT_KEY`, lalu memanggil `window.snap.pay(token)`. Seluruh callback sisi klien (`onSuccess`, `onPending`, `onError`, `onClose`) hanya mengarahkan navigasi browser ke `/order/[accessToken]`. Klien dilarang keras mengubah status pesanan di database.
+    - Memperbarui tombol produk pada halaman publik `/[username]` dari "Segera hadir" menjadi tombol aktif "Beli" yang mengarahkan pembeli ke `/checkout/[productId]`.
+  - Mengimplementasikan Route Handler Webhook `/api/webhooks/midtrans` (POST):
+    - Verifikasi signature SHA-512 (`crypto.createHash("sha512").update(order_id + status_code + gross_amount + server_key).digest("hex")`) menggunakan perbandingan _timing-safe_ (`crypto.timingSafeEqual`) untuk mencegah serangan _timing attack_. Jika tanda tangan tidak cocok, kembalikan HTTP 403 tanpa memodifikasi data.
+    - Validasi pencarian pesanan: Jika `order_id` tidak ditemukan di database, kembalikan HTTP 404.
+    - Validasi nominal `gross_amount`: Mem-parsing string nominal dari Midtrans (misal `"25000.00"`) dan membandingkannya secara presisi dengan `amount_idr` pesanan. Jika ada ketidakcocokan, tolak dengan HTTP 422.
+    - Pemetaan status transaksi:
+      - `settlement` -> `paid` (mengisi `paid_at`).
+      - `capture` dengan `fraud_status === "accept"` -> `paid` (mengisi `paid_at`).
+      - `pending` -> `pending`.
+      - `expire` -> `expired`.
+      - `deny`, `cancel`, `failure` -> `failed`.
+    - Desain Idempoten: Webhook duplikat ditangani dengan aman. Status yang telah berstatus `paid` tidak boleh diturunkan (_downgraded_) ke status lain apa pun. Handler selalu mengembalikan respons HTTP 200 setelah diproses. Status pesanan HANYA boleh berubah melalui webhook terverifikasi di server.
+  - Halaman status `/order/[accessToken]`:
+    - Menggunakan konfigurasi `export const dynamic = "force-dynamic"` dan metadata `robots: { index: false, follow: false }` untuk mencegah pengindeksan mesin pencari dan cache browser.
+    - Jika `status === "pending"`, menampilkan antarmuka "Menunggu pembayaran" dan tombol muat ulang status (`OrderStatusRefresh`).
+    - Jika `status === "paid"`, menampilkan judul produk, tombol/tautan langsung ke `delivery_url`, serta pesan peringatan jelas: _"Simpan link halaman ini. Kami belum mengirim email."_
+    - Jika `status === "expired"` atau `"failed"`, menampilkan pesan kesalahan status beserta tautan kembali ke profil kreator.
+    - Keamanan Akses `delivery_url`: Query utama pesanan tidak memilih `delivery_url`. Nilai `delivery_url` hanya di-query secara sekunder di sisi server JIKA dan HANYA JIKA status pesanan terbukti `paid`.
+  - Aturan Robots & Crawlers (`apps/web/app/robots.ts`):
+    - Menambahkan rute internal dan privat ke daftar disallow: `/checkout`, `/order`, dan `/api/webhooks`.
+  - Batasan di luar lingkup Tahap 7b:
+    - Saldo/payout kreator, pengiriman email konfirmasi/notifikasi transaksi, kupon diskon, produk gratis, refund, dan registrasi akun pembeli.
+- **Rasional:**
+  - **Zero Trust pada State Klien:** Keamanan pembayaran digital bergantung pada prinsip bahwa klien browser tidak pernah dapat dipercaya untuk menentukan harga barang, status pembayaran, atau kelayakan akses link unduhan. Mengunci harga dari database dan hanya memperbarui status melalui webhook dengan verifikasi kriptografis SHA-512 menutup celah manipulasi transaksi (_tampering_).
+  - **Idempotensi & Ketahanan Webhook:** Midtrans dapat mengirimkan notifikasi berulang untuk transaksi yang sama atau mengirimkan notifikasi dalam urutan yang tertukar. Memblokir penurunan status dari `paid` ke status non-paid menjamin hak akses pembeli tidak pernah hilang akibat anomali transmisi jaringan.
+  - **Dua Lapis Isolasi Data Aset Digital:** Tautan produk digital (`delivery_url`) dilindungi di dua titik: (1) tidak pernah disertakan dalam query publik `/[username]` maupun formulir `/checkout/[productId]`, dan (2) pada halaman `/order/[accessToken]`, URL pengiriman hanya diambil dari database apabila status transaksi di database telah diverifikasi `paid`.
+  - **Integritas Relasi Basis Data:** Penggunaan relasi `onDelete: 'restrict'` pada tabel pesanan mencegah skenario di mana seorang kreator menghapus produk yang telah dibayar pembeli, menjamin audit trail transaksi dan akses unduhan pembeli tetap terjaga.
