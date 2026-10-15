@@ -143,3 +143,33 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Pemisahan Tanggung Jawab Melalui Route Groups:** Penggunaan Route Groups `(marketing)`, `(auth)`, `(dashboard)` memungkinkan isolasi layout spesifik (seperti shell navigasi dashboard dengan session guard) tanpa mempengaruhi URL publik atau menambahkan segmen path yang tidak diinginkan pada URL browser.
   - **Defense-in-Depth untuk Keamanan Sesi:** Menempatkan server session guard pada `(dashboard)/layout.tsx` memberikan lapisan keamanan pertama yang mencegah render komponen dashboard bagi pengunjung tanpa sesi aktif, sementara pengecekan session di setiap Server Action dan halaman tetap dipertahankan untuk menjamin zero unauthorized access pada level aksi data.
   - **Pencegahan Konflik Routing Profil Kreator:** Karena halaman publik kreator beroperasi pada segmen dinamis top-level `/[username]`, segmen sistem penting seperti `checkout`, `order`, `orders`, `products`, `links`, `webhooks`, dan `settings` harus dicadangkan (`RESERVED_USERNAMES`) agar pendaftaran username baru tidak pernah menimpa atau menabrak rute fungsional aplikasi.
+
+---
+
+## 12. Model Data Produk Digital, Keamanan Delivery URL, dan Sub-routing Dashboard (Tahap 7a)
+
+- **Keputusan:**
+  - Menambahkan tabel `product` pada `packages/db/schema.ts` secara additif dengan kolom `id`, `profile_id` (FK `profile`, cascade), `title`, `description` (nullable), `price_idr` (integer Rupiah), `delivery_url` (text), `position` (integer default 0), `is_active` (boolean default true), timestamps (`created_at`, `updated_at`), serta indeks komposit `product_profile_position_idx` pada `(profile_id, position)`.
+  - Mengimplementasikan validasi server berbasis fungsi murni TypeScript (`apps/web/lib/product-validation.ts`) dan unit test komprehensif:
+    - `title`: wajib, maksimal 100 karakter.
+    - `description`: opsional (nullable), maksimal 500 karakter.
+    - `price_idr`: wajib integer IDR (tipe number), minimal Rp 1.000, maksimal Rp 10.000.000, menolak desimal, angka negatif, maupun string.
+    - `delivery_url`: wajib berupa URL valid dengan protokol `http://` atau `https://`, maksimal 500 karakter.
+  - Menerapkan perlindungan autentikasi dan otorisasi kepemilikan profil (`profileId === userProfile.id`) pada seluruh Server Action produk (`createProductAction`, `updateProductAction`, `deleteProductAction`, `toggleProductActiveAction`, `reorderProductAction`).
+  - Memecah dashboard menjadi sub-route modular:
+    - `/dashboard`: ringkasan statistik (jumlah tautan aktif, jumlah produk digital aktif) dan pengaturan profil kreator.
+    - `/dashboard/links`: antarmuka `LinkManager` untuk manajemen tautan link-in-bio.
+    - `/dashboard/products`: antarmuka `ProductManager` untuk CRUD produk digital, toggle status aktif, dan pengaturan urutan naik/turun.
+    - Navigasi tab terpusat pada `(dashboard)/layout.tsx` (`DashboardTabs`) dengan deteksi tab aktif via `usePathname()`.
+    - Redirect guard: jika pengguna belum memiliki profil, akses ke `/dashboard/links` dan `/dashboard/products` otomatis dialihkan ke `/dashboard` untuk menyelesaikan formulir onboarding.
+  - Menerapkan perlindungan keamanan ketat pada halaman publik `/[username]`:
+    - Query Drizzle secara eksplisit hanya memilih kolom publik (`id`, `title`, `description`, `priceIdr`, `position`), mengecualikan kolom `delivery_url`.
+    - Nilai `delivery_url` tidak pernah dirender ke HTML atau diserialisasi ke dalam payload RSC browser.
+    - Menampilkan kartu produk digital aktif di bawah tautan bio dengan format harga Rupiah (`Rp 25.000`) dan tombol "Segera hadir" nonaktif (`disabled`).
+    - Suite pengujian keamanan otomatis (`page.test.tsx`) memverifikasi proyeksi query database dan memastikan tidak ada kebocoran URL pengiriman.
+  - Menetapkan batasan di luar lingkup Tahap 7a: alur checkout, gerbang pembayaran, upload file aset lokal/S3, diskon kupon promosi, dan produk gratis (harga Rp 0).
+- **Rasional:**
+  - **Integritas Moneter Rupiah:** Penggunaan integer IDR mencegah distorsi pembulatan floating-point pada kalkulasi moneter dan selaras dengan standar transaksi Rupiah di Indonesia tanpa subunit sen.
+  - **Zero Leakage Proteksi Aset Digital:** Tautan pengiriman (`delivery_url`) adalah aset privat yang hanya boleh diberikan kepada pembeli setelah pembayaran berhasil di tahap berikutnya. Menghilangkan kolom tersebut pada tingkat proyeksi SELECT database menjamin data sensitif tidak pernah menyentuh browser publik sebelum sistem verifikasi pesanan terpasang.
+  - **Modularitas dan Skalabilitas Dashboard:** Memecah dashboard ke sub-route (`/dashboard`, `/dashboard/links`, `/dashboard/products`) merapikan hierarki aplikasi, meringankan render tree setiap halaman, serta mempersiapkan arsitektur navigasi yang bersih untuk fitur transaksi dan analitik di tahap selanjutnya.
+
