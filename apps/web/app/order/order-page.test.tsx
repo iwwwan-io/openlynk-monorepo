@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import OrderPage from "./[accessToken]/page";
+import OrderPage, { generateMetadata } from "./[accessToken]/page";
 
 const mockNotFound = vi.fn();
 const mockDbSelect = vi.fn();
@@ -169,15 +169,27 @@ describe("OrderPage (/order/[accessToken]) & delivery_url Security Tests", () =>
     // Verify Mandatory Warning Alert
     expect(html).toContain("Simpan link halaman ini. Kami belum mengirim email.");
 
-    // Verify deliveryUrl button / link is rendered
+    // Verify deliveryUrl button / link is rendered with secure attributes
     expect(html).toContain("Akses Produk Digital Anda");
     expect(html).toContain(secretUrl);
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain(`href="${secretUrl}"`);
 
     // Verify deliveryUrl query was indeed executed for paid status
     const deliveryProjection = selectCalls.find(
       (call) => typeof call === "object" && call !== null && "deliveryUrl" in call
     );
     expect(deliveryProjection).toBeDefined();
+  });
+
+  it("exports metadata with referrer set to 'no-referrer' and robots noindex", async () => {
+    const meta = await generateMetadata();
+    expect(meta.referrer).toBe("no-referrer");
+    expect(meta.robots).toEqual({
+      index: false,
+      follow: false,
+    });
   });
 
   it("renders expired state with link back to creator profile and without delivery_url", async () => {

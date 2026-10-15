@@ -18,6 +18,7 @@ interface OrderPageProps {
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Status Pesanan | Openlynk",
+    referrer: "no-referrer",
     robots: {
       index: false,
       follow: false,

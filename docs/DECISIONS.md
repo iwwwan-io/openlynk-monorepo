@@ -209,9 +209,9 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
       - `deny`, `cancel`, `failure` -> `failed`.
     - Desain Idempoten: Webhook duplikat ditangani dengan aman. Status yang telah berstatus `paid` tidak boleh diturunkan (_downgraded_) ke status lain apa pun. Handler selalu mengembalikan respons HTTP 200 setelah diproses. Status pesanan HANYA boleh berubah melalui webhook terverifikasi di server.
   - Halaman status `/order/[accessToken]`:
-    - Menggunakan konfigurasi `export const dynamic = "force-dynamic"` dan metadata `robots: { index: false, follow: false }` untuk mencegah pengindeksan mesin pencari dan cache browser.
+    - Menggunakan konfigurasi `export const dynamic = "force-dynamic"` dan metadata `robots: { index: false, follow: false }` serta `referrer: "no-referrer"` untuk mencegah pengindeksan mesin pencari, cache browser, dan kebocoran token akses pesanan via header HTTP Referer.
     - Jika `status === "pending"`, menampilkan antarmuka "Menunggu pembayaran" dan tombol muat ulang status (`OrderStatusRefresh`).
-    - Jika `status === "paid"`, menampilkan judul produk, tombol/tautan langsung ke `delivery_url`, serta pesan peringatan jelas: _"Simpan link halaman ini. Kami belum mengirim email."_
+    - Jika `status === "paid"`, menampilkan judul produk, tombol/tautan langsung ke `delivery_url` yang diproteksi dengan atribut keamanan `target="_blank"` dan `rel="noopener noreferrer"`, serta pesan peringatan jelas: _"Simpan link halaman ini. Kami belum mengirim email."_
     - Jika `status === "expired"` atau `"failed"`, menampilkan pesan kesalahan status beserta tautan kembali ke profil kreator.
     - Keamanan Akses `delivery_url`: Query utama pesanan tidak memilih `delivery_url`. Nilai `delivery_url` hanya di-query secara sekunder di sisi server JIKA dan HANYA JIKA status pesanan terbukti `paid`.
   - Aturan Robots & Crawlers (`apps/web/app/robots.ts`):
