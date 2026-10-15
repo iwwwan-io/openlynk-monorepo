@@ -1,8 +1,11 @@
-import { and, asc, eq, getDb, link, profile } from "@openlynk/db";
-import { Badge, Card } from "@openlynk/ui";
+import { formatPriceIdr } from "@/lib/product-validation";
+import { and, asc, eq, getDb, link, product, profile } from "@openlynk/db";
+import { Badge, Button, Card } from "@openlynk/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import React from "react";
+
 
 interface PublicProfilePageProps {
   params: Promise<{
@@ -85,6 +88,19 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
     .where(and(eq(link.profileId, userProfile.id), eq(link.isActive, true)))
     .orderBy(asc(link.position), asc(link.createdAt));
 
+  // KEAMANAN: Kolom delivery_url secara ketat TIDAK boleh diseleksi pada query halaman publik
+  const activeProducts = await db
+    .select({
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      priceIdr: product.priceIdr,
+      position: product.position,
+    })
+    .from(product)
+    .where(and(eq(product.profileId, userProfile.id), eq(product.isActive, true)))
+    .orderBy(asc(product.position), asc(product.createdAt));
+
   // Ambil inisial nama untuk fallback avatar
   const initial = (userProfile.displayName.trim()[0] || "U").toUpperCase();
 
@@ -151,6 +167,49 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
           )}
         </section>
 
+        {/* Daftar Produk Digital Aktif */}
+        {activeProducts.length > 0 && (
+          <section className="mt-8 w-full space-y-3.5" aria-label="Produk Digital">
+            <div className="flex items-center gap-2 px-1">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Produk Digital
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {activeProducts.map((prod) => (
+                <Card key={prod.id} className="p-4 bg-white shadow-sm border-slate-200">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-slate-900 text-sm sm:text-base">
+                        {prod.title}
+                      </h3>
+                      <span className="shrink-0 font-bold text-sm text-blue-600">
+                        {formatPriceIdr(prod.priceIdr)}
+                      </span>
+                    </div>
+                    {prod.description && (
+                      <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">
+                        {prod.description}
+                      </p>
+                    )}
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        type="button"
+                        disabled
+                        size="sm"
+                        variant="outline"
+                        className="w-full sm:w-auto text-xs opacity-75 cursor-not-allowed border-slate-300 bg-slate-100 text-slate-600"
+                      >
+                        Segera hadir
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Footer Branding */}
         <footer className="mt-12 text-center">
           <Link
@@ -165,3 +224,4 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
     </main>
   );
 }
+
