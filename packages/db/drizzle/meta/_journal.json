@@ -15,6 +15,13 @@
       "when": 1791898805357,
       "tag": "0001_amusing_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792028254136,
+      "tag": "0002_aspiring_scrambler",
+      "breakpoints": true
     }
   ]
 }

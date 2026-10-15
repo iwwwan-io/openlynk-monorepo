@@ -96,6 +96,27 @@ export const link = pgTable(
   (table) => [index("link_profile_position_idx").on(table.profileId, table.position)]
 );
 
+export const product = pgTable(
+  "product",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profile.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    priceIdr: integer("price_idr").notNull(),
+    deliveryUrl: text("delivery_url").notNull(),
+    position: integer("position").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("product_profile_position_idx").on(table.profileId, table.position)]
+);
+
 export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
 
@@ -113,3 +134,7 @@ export type NewProfile = typeof profile.$inferInsert;
 
 export type Link = typeof link.$inferSelect;
 export type NewLink = typeof link.$inferInsert;
+
+export type Product = typeof product.$inferSelect;
+export type NewProduct = typeof product.$inferInsert;
+

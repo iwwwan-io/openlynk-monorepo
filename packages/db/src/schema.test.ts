@@ -1,6 +1,6 @@
 import { getTableName } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, createDbClient, link, profile, session, user, verification } from "./index";
+import { account, createDbClient, link, product, profile, session, user, verification } from "./index";
 
 describe("Database schema", () => {
   it("defines standard Better Auth and Openlynk tables with correct table names", () => {
@@ -10,7 +10,9 @@ describe("Database schema", () => {
     expect(getTableName(verification)).toBe("verification");
     expect(getTableName(profile)).toBe("profile");
     expect(getTableName(link)).toBe("link");
+    expect(getTableName(product)).toBe("product");
   });
+
 
   it("verifies user table structure", () => {
     expect(user.id).toBeDefined();
@@ -66,6 +68,20 @@ describe("Database schema", () => {
     expect(link.createdAt).toBeDefined();
     expect(link.updatedAt).toBeDefined();
   });
+
+  it("verifies product table structure", () => {
+    expect(product.id).toBeDefined();
+    expect(product.profileId).toBeDefined();
+    expect(product.title).toBeDefined();
+    expect(product.description).toBeDefined();
+    expect(product.priceIdr).toBeDefined();
+    expect(product.deliveryUrl).toBeDefined();
+    expect(product.position).toBeDefined();
+    expect(product.isActive).toBeDefined();
+    expect(product.createdAt).toBeDefined();
+    expect(product.updatedAt).toBeDefined();
+  });
+
 
   it("exports createDbClient factory function and accepts options", () => {
     expect(typeof createDbClient).toBe("function");
