@@ -24,11 +24,7 @@ export default async function DashboardPage() {
   const db = getDb();
 
   // Ambil profil kreator milik user yang sedang aktif
-  const [userProfile] = await db
-    .select()
-    .from(profile)
-    .where(eq(profile.userId, user.id))
-    .limit(1);
+  const [userProfile] = await db.select().from(profile).where(eq(profile.userId, user.id)).limit(1);
 
   // Jika belum memiliki profil, tampilkan formulir onboarding
   if (!userProfile) {

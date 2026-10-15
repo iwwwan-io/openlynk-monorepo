@@ -172,4 +172,3 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
   - **Integritas Moneter Rupiah:** Penggunaan integer IDR mencegah distorsi pembulatan floating-point pada kalkulasi moneter dan selaras dengan standar transaksi Rupiah di Indonesia tanpa subunit sen.
   - **Zero Leakage Proteksi Aset Digital:** Tautan pengiriman (`delivery_url`) adalah aset privat yang hanya boleh diberikan kepada pembeli setelah pembayaran berhasil di tahap berikutnya. Menghilangkan kolom tersebut pada tingkat proyeksi SELECT database menjamin data sensitif tidak pernah menyentuh browser publik sebelum sistem verifikasi pesanan terpasang.
   - **Modularitas dan Skalabilitas Dashboard:** Memecah dashboard ke sub-route (`/dashboard`, `/dashboard/links`, `/dashboard/products`) merapikan hierarki aplikasi, meringankan render tree setiap halaman, serta mempersiapkan arsitektur navigasi yang bersih untuk fitur transaksi dan analitik di tahap selanjutnya.
-

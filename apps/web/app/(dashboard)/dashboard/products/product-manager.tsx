@@ -37,7 +37,6 @@ interface ProductManagerProps {
 }
 
 export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
-
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newPrice, setNewPrice] = useState("25000");
@@ -390,9 +389,7 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                         </div>
 
                         {item.description && (
-                          <p className="text-xs text-slate-600 line-clamp-2">
-                            {item.description}
-                          </p>
+                          <p className="text-xs text-slate-600 line-clamp-2">{item.description}</p>
                         )}
 
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-400">

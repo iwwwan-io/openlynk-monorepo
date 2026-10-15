@@ -1,6 +1,15 @@
 import { getTableName } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { account, createDbClient, link, product, profile, session, user, verification } from "./index";
+import {
+  account,
+  createDbClient,
+  link,
+  product,
+  profile,
+  session,
+  user,
+  verification,
+} from "./index";
 
 describe("Database schema", () => {
   it("defines standard Better Auth and Openlynk tables with correct table names", () => {
@@ -12,7 +21,6 @@ describe("Database schema", () => {
     expect(getTableName(link)).toBe("link");
     expect(getTableName(product)).toBe("product");
   });
-
 
   it("verifies user table structure", () => {
     expect(user.id).toBeDefined();
@@ -81,7 +89,6 @@ describe("Database schema", () => {
     expect(product.createdAt).toBeDefined();
     expect(product.updatedAt).toBeDefined();
   });
-
 
   it("exports createDbClient factory function and accepts options", () => {
     expect(typeof createDbClient).toBe("function");

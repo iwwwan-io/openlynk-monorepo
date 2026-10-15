@@ -15,7 +15,6 @@ import {
 } from "@openlynk/ui";
 import React, { useState, useTransition } from "react";
 
-
 interface OnboardingFormProps {
   defaultName: string;
 }

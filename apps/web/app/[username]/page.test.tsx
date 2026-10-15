@@ -29,7 +29,6 @@ vi.mock("@openlynk/db", () => {
         };
         return queryObj;
       },
-
     }),
     eq: vi.fn(),
     and: vi.fn(),
@@ -159,7 +158,6 @@ describe("PublicProfilePage (/[username]) & Security Checks", () => {
       expect(productSelection).not.toHaveProperty("deliveryUrl");
       expect(productSelection).not.toHaveProperty("delivery_url");
     }
-
 
     // 2. Check that no secret delivery url appears in the rendered output
     expect(html).not.toContain("deliveryUrl");

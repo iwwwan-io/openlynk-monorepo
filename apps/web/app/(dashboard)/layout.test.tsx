@@ -19,7 +19,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
 }));
 
-
 vi.mock("@openlynk/auth", () => ({
   auth: {
     api: {
@@ -111,4 +110,3 @@ describe("DashboardLayout Server Component", () => {
     expect(html).toContain("Formulir Onboarding");
   });
 });
-

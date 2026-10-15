@@ -70,7 +70,6 @@ vi.mock("@openlynk/db", () => {
   };
 });
 
-
 describe("Dashboard Sub-routes & Redirect Guards", () => {
   beforeEach(() => {
     vi.clearAllMocks();

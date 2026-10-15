@@ -6,7 +6,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import React from "react";
 
-
 interface PublicProfilePageProps {
   params: Promise<{
     username: string;
@@ -224,4 +223,3 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
     </main>
   );
 }
-
