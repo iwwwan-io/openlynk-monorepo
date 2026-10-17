@@ -2,7 +2,7 @@
 
 import { Button } from "@openlynk/ui";
 import { useRouter } from "next/navigation";
-import React, { useTransition } from "react";
+import React, { useEffect, useTransition } from "react";
 
 export function OrderStatusRefresh() {
   const router = useRouter();
@@ -13,6 +13,15 @@ export function OrderStatusRefresh() {
       router.refresh();
     });
   };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      startTransition(() => {
+        router.refresh();
+      });
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [router]);
 
   return (
     <Button

@@ -88,16 +88,17 @@ export default async function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Link href={`/${userProfile.username}`} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100"
-              >
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100"
+            >
+              <Link href={`/${userProfile.username}`} target="_blank" rel="noopener noreferrer">
                 <span>Lihat Halaman Publik</span>
                 <span>↗</span>
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
             <form action={logoutAction}>
               <Button
@@ -130,11 +131,9 @@ export default async function DashboardPage() {
               <p className="text-xs text-slate-500 mb-3">
                 Tautan eksternal yang ditampilkan di halaman bio kreator Anda.
               </p>
-              <Link href="/dashboard/links">
-                <Button variant="outline" size="sm" className="w-full text-xs font-medium">
-                  Kelola Tautan ↗
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" className="w-full text-xs font-medium" asChild>
+                <Link href="/dashboard/links">Kelola Tautan ↗</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -154,11 +153,9 @@ export default async function DashboardPage() {
               <p className="text-xs text-slate-500 mb-3">
                 Katalog ebook, preset, atau template digital yang siap dijual.
               </p>
-              <Link href="/dashboard/products">
-                <Button variant="outline" size="sm" className="w-full text-xs font-medium">
-                  Kelola Produk Digital ↗
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" className="w-full text-xs font-medium" asChild>
+                <Link href="/dashboard/products">Kelola Produk Digital ↗</Link>
+              </Button>
             </CardContent>
           </Card>
         </section>

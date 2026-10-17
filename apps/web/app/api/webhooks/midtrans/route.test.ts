@@ -36,7 +36,9 @@ vi.mock("@openlynk/db", () => {
         };
       },
     }),
-    eq: vi.fn((col, val) => ({ col, val })),
+    eq: vi.fn((col, val) => ({ op: "eq", col, val })),
+    ne: vi.fn((col, val) => ({ op: "ne", col, val })),
+    and: vi.fn((...args) => ({ op: "and", args })),
     order: {
       id: "order.id",
       midtransOrderId: "order.midtransOrderId",
@@ -353,5 +355,46 @@ describe("POST /api/webhooks/midtrans Route Handler", () => {
     expect(data.message).toContain("penurunan status diabaikan");
     // Verify DB update was NOT called
     expect(mockDbUpdate).not.toHaveBeenCalled();
+  });
+
+  it("uses atomic conditional update predicate to prevent TOCTOU race conditions when status is not paid", async () => {
+    const orderId = "order-atomic-where-check";
+    const statusCode = "200";
+    const grossAmount = "25000.00";
+    const signatureKey = generateSignature(orderId, statusCode, grossAmount);
+
+    const payload = {
+      order_id: orderId,
+      status_code: statusCode,
+      gross_amount: grossAmount,
+      signature_key: signatureKey,
+      transaction_status: "expire",
+    };
+
+    mockDbSelect.mockResolvedValueOnce([
+      {
+        id: "order-db-pending",
+        midtransOrderId: orderId,
+        amountIdr: 25000,
+        status: "pending",
+      },
+    ]);
+
+    const req = new Request("http://localhost:3000/api/webhooks/midtrans", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mockDbUpdate).toHaveBeenCalledTimes(1);
+    expect(mockDbWhere).toHaveBeenCalledWith({
+      op: "and",
+      args: [
+        { op: "eq", col: "order.id", val: "order-db-pending" },
+        { op: "ne", col: "order.status", val: "paid" },
+      ],
+    });
   });
 });

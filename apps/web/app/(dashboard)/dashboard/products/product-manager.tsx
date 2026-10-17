@@ -303,8 +303,11 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                     <form onSubmit={handleSaveEdit} className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1 sm:col-span-2">
-                          <Label className="text-xs">Judul Produk</Label>
+                          <Label htmlFor={`edit-product-title-${item.id}`} className="text-xs">
+                            Judul Produk
+                          </Label>
                           <Input
+                            id={`edit-product-title-${item.id}`}
                             type="text"
                             required
                             maxLength={100}
@@ -313,8 +316,11 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                           />
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label className="text-xs">Deskripsi</Label>
+                          <Label htmlFor={`edit-product-desc-${item.id}`} className="text-xs">
+                            Deskripsi
+                          </Label>
                           <Textarea
+                            id={`edit-product-desc-${item.id}`}
                             maxLength={500}
                             rows={2}
                             value={editDescription}
@@ -322,8 +328,11 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Harga (IDR)</Label>
+                          <Label htmlFor={`edit-product-price-${item.id}`} className="text-xs">
+                            Harga (IDR)
+                          </Label>
                           <Input
+                            id={`edit-product-price-${item.id}`}
                             type="number"
                             required
                             min={1000}
@@ -334,8 +343,11 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">URL Pengiriman</Label>
+                          <Label htmlFor={`edit-product-delivery-${item.id}`} className="text-xs">
+                            URL Pengiriman
+                          </Label>
                           <Input
+                            id={`edit-product-delivery-${item.id}`}
                             type="url"
                             required
                             maxLength={500}
@@ -406,7 +418,7 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                             disabled={isPending || index === 0}
                             onClick={() => handleReorder(item.id, "up")}
                             aria-label="Pindahkan produk ke atas"
-                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
                           >
                             ▲
                           </button>
@@ -415,7 +427,7 @@ export function ProductManager({ initialProducts = [] }: ProductManagerProps) {
                             disabled={isPending || index === initialProducts.length - 1}
                             onClick={() => handleReorder(item.id, "down")}
                             aria-label="Pindahkan produk ke bawah"
-                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
                           >
                             ▼
                           </button>

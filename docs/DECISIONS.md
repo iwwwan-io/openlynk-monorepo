@@ -236,3 +236,34 @@ Dokumen ini mencatat keputusan arsitektural dan teknis utama untuk Openlynk bese
 - **Rasional:**
   - **Integritas Pengalaman Pengguna (UX):** Pengguna yang sudah terotentikasi tidak memerlukan formulir masuk atau daftar akun. Mengarahkan mereka langsung ke dashboard mencegah kebingungan dan redundansi alur kerja.
   - **Ketahanan Status Transaksi (Zero Stuck Payment):** Webhook jaringan dapat mengalami keterlambatan atau tidak terkirim akibat kendala jaringan atau ketiadaan konfigurasi notifikasi URL di dashboard gateway. Sinkronisasi aktif berbasis server component memastikan pembeli yang telah menyelesaikan pembayaran (atau yang pesanannya kedaluwarsa) langsung memperoleh status akurat tanpa hambatan.
+
+---
+
+## 15. Hardening Rekayasa & Keamanan Sistem Berdasarkan Audit Lintas Tim (Teamwork Audit Hardening)
+
+- **Tanggal:** 16 Oktober 2026
+- **Status:** Diterima & Diimplementasikan (Accepted & Implemented)
+- **Keputusan:**
+  - **Pencegahan TOCTOU Concurrency pada Webhook Midtrans (`SEC-01 / DB-01 / PAY-01`)**:
+    - Menambahkan predikat kondisional atomik di level SQL engine: `where(newStatus !== "paid" ? and(eq(order.id, existingOrder.id), ne(order.status, "paid")) : eq(order.id, existingOrder.id))` pada handler webhook `/api/webhooks/midtrans`. Menjamin transaksi berstatus `paid` tidak dapat ditimpa oleh event konkuren `expire` atau `cancel`.
+  - **Isolasi Database Lingkungan Lokal (`SEC-08`)**:
+    - Memperbarui `apps/web/.env.local` dan root `.env.local` agar variabel `DATABASE_URL` runtime mengarah secara eksklusif ke database pengembangan (`openlynk_dev`) Layerbase pooler, mencegah risiko mutasi data pada database produksi (`iwwwan`) saat pengembangan lokal.
+  - **Integritas Pipeline Turborepo (`ARCH-01`)**:
+    - Mendaftarkan variabel lingkungan `DATABASE_URL_DIRECT` dan `NODE_ENV` ke dalam `globalEnv` dan array `env` task build di `turbo.json`.
+  - **Pembersihan Quality Gate Formatter (`ARCH-02`)**:
+    - Menambahkan direktori `.agents/`, `.turbo/`, `apps/web/next-env.d.ts`, dan `*.tsbuildinfo` ke `.prettierignore` sehingga seluruh quality gates `pnpm format` lulus 100%.
+  - **Optimasi Latensi Serverless Vercel & HTTP Security Headers (`OPS-01 / SEC-03 / OPS-02`)**:
+    - Membuat `apps/web/vercel.json` dengan konfigurasi `"regions": ["sin1"]` untuk memindahkan eksekusi Serverless Functions Next.js dari US East ke Singapura demi memangkas latensi 200–350ms untuk pengguna di Indonesia.
+    - Mengonfigurasi `poweredByHeader: false` dan menyuntikkan HTTP security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`) di `apps/web/next.config.mjs`.
+  - **Atomisitas Pembaruan Posisi Urutan (`DB-03`)**:
+    - Membungkus mutasi swap urutan item pada `reorderLinkAction` dan `reorderProductAction` menggunakan `db.transaction()` untuk mencegah inkonsistensi urutan akibat diskoneksi jaringan.
+  - **Kepatuhan Aksesibilitas WCAG & Semantik HTML (`FE-19 / FE-20 / FE-21`)**:
+    - Menghilangkan nesting ilegal `<Link><Button>` / `<a><button>` di seluruh rute pemasaran, checkout, profil, dan dashboard dengan mengadopsi pola Radix UI `<Button asChild><Link ...>`.
+    - Menambahkan atribut asosiasi `htmlFor` dan `id` pada seluruh formulir edit modal tautan dan produk digital.
+    - Memperbesar ukuran touch targets tombol panah pengurutan menjadi minimal 36x36px (WCAG 2.5.5).
+  - **Resiliensi Pengalaman Pengguna & Rute Next.js (`ARCH-04 / FE-13 / FE-14 / FE-07`)**:
+    - Menyediakan skeleton loader `loading.tsx` di tingkat root, rute profil publik `/[username]`, checkout `/checkout/[productId]`, order `/order/[accessToken]`, dan `(dashboard)`.
+    - Menyediakan boundary penanganan kesalahan global `error.tsx` dengan kemampuan interaktif _reset / retry_.
+    - Menambahkan interval adaptif 4-detik auto-polling pada `apps/web/app/order/[accessToken]/order-status-refresh.tsx` sehingga halaman pembeli langsung bertransisi otomatis ke status Lunas begitu webhook pembayaran Midtrans diterima.
+- **Rasional:**
+  - Menghilangkan titik-titik kerentanan konkurensi (race condition), melindungi basis data produksi dari kesalahan lingkungan pengembang, memangkas latensi fisik jaringan di Indonesia, serta memastikan pengalaman pengguna memenuhi standar reliabilitas modern dan kepatuhan aksesibilitas internasional (WCAG 4.1.2 & 1.3.1).

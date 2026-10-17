@@ -403,15 +403,17 @@ export async function reorderProductAction(
           ? targetProduct.position + 1
           : targetProduct.position;
 
-      await db
-        .update(product)
-        .set({ position: targetPos, updatedAt: new Date() })
-        .where(eq(product.id, targetProduct.id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(product)
+          .set({ position: targetPos, updatedAt: new Date() })
+          .where(eq(product.id, targetProduct.id));
 
-      await db
-        .update(product)
-        .set({ position: prevPos, updatedAt: new Date() })
-        .where(eq(product.id, prevProduct.id));
+        await tx
+          .update(product)
+          .set({ position: prevPos, updatedAt: new Date() })
+          .where(eq(product.id, prevProduct.id));
+      });
     } else if (direction === "down") {
       if (currentIndex === userProducts.length - 1) {
         return { success: true };
@@ -428,15 +430,17 @@ export async function reorderProductAction(
           ? targetProduct.position - 1
           : targetProduct.position;
 
-      await db
-        .update(product)
-        .set({ position: targetPos, updatedAt: new Date() })
-        .where(eq(product.id, targetProduct.id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(product)
+          .set({ position: targetPos, updatedAt: new Date() })
+          .where(eq(product.id, targetProduct.id));
 
-      await db
-        .update(product)
-        .set({ position: nextPos, updatedAt: new Date() })
-        .where(eq(product.id, nextProduct.id));
+        await tx
+          .update(product)
+          .set({ position: nextPos, updatedAt: new Date() })
+          .where(eq(product.id, nextProduct.id));
+      });
     }
 
     revalidatePath("/dashboard");

@@ -179,16 +179,14 @@ export function CheckoutForm({ product, creator, clientKey, snapScriptUrl }: Che
                   >
                     Buka Kembali Pembayaran
                   </Button>
-                  <Link href={`/order/${activeAccessToken}`}>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="w-full sm:w-auto border-amber-300 bg-white text-amber-900 hover:bg-amber-100 text-xs"
-                    >
-                      Lihat Status Pesanan →
-                    </Button>
-                  </Link>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto border-amber-300 bg-white text-amber-900 hover:bg-amber-100 text-xs"
+                  >
+                    <Link href={`/order/${activeAccessToken}`}>Lihat Status Pesanan →</Link>
+                  </Button>
                 </div>
               </div>
             )}

@@ -58,7 +58,7 @@ export default async function OrderPage(props: OrderPageProps) {
     notFound();
   }
 
-  let orderData = { ...initialOrder };
+  const orderData = { ...initialOrder };
 
   // Sinkronisasi status langsung dari Midtrans API jika status saat ini masih 'pending'
   if (orderData.status === "pending" && orderData.midtransOrderId) {
@@ -167,21 +167,24 @@ export default async function OrderPage(props: OrderPageProps) {
               <OrderStatusRefresh />
 
               <div className="pt-2 text-center space-y-2">
-                <Link href={`/checkout/${orderData.productId}`}>
-                  <Button variant="outline" className="w-full text-slate-700 border-slate-300">
+                <Button
+                  variant="outline"
+                  className="w-full text-slate-700 border-slate-300"
+                  asChild
+                >
+                  <Link href={`/checkout/${orderData.productId}`}>
                     🔄 Beli Ulang / Coba Metode Lain
-                  </Button>
-                </Link>
-                {creatorUsername && (
-                  <Link href={`/${creatorUsername}`}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-slate-500 hover:text-slate-800"
-                    >
-                      ← Kembali ke Profil {creatorName}
-                    </Button>
                   </Link>
+                </Button>
+                {creatorUsername && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-slate-500 hover:text-slate-800"
+                    asChild
+                  >
+                    <Link href={`/${creatorUsername}`}>← Kembali ke Profil {creatorName}</Link>
+                  </Button>
                 )}
               </div>
             </CardContent>
@@ -231,16 +234,19 @@ export default async function OrderPage(props: OrderPageProps) {
 
               {deliveryUrl ? (
                 <div className="pt-2">
-                  <a
-                    href={deliveryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full"
+                  <Button
+                    asChild
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 text-sm shadow-md transition"
                   >
-                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 text-sm shadow-md transition">
+                    <a
+                      href={deliveryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-full"
+                    >
                       Akses Produk Digital Anda ↗
-                    </Button>
-                  </a>
+                    </a>
+                  </Button>
                   <p className="mt-2 text-center text-[11px] text-slate-400">
                     Klik tombol di atas untuk membuka link pengiriman/unduhan produk Anda.
                   </p>
@@ -292,11 +298,11 @@ export default async function OrderPage(props: OrderPageProps) {
 
               {creatorUsername && (
                 <div className="pt-2 text-center">
-                  <Link href={`/${creatorUsername}`}>
-                    <Button variant="outline" className="w-full text-slate-700">
+                  <Button variant="outline" className="w-full text-slate-700" asChild>
+                    <Link href={`/${creatorUsername}`}>
                       ← Kembali ke Halaman Profil {creatorName}
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               )}
             </CardContent>

@@ -326,15 +326,17 @@ export async function reorderLinkAction(
           ? targetLink.position + 1
           : targetLink.position;
 
-      await db
-        .update(link)
-        .set({ position: targetPos, updatedAt: new Date() })
-        .where(eq(link.id, targetLink.id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(link)
+          .set({ position: targetPos, updatedAt: new Date() })
+          .where(eq(link.id, targetLink.id));
 
-      await db
-        .update(link)
-        .set({ position: prevPos, updatedAt: new Date() })
-        .where(eq(link.id, previousLink.id));
+        await tx
+          .update(link)
+          .set({ position: prevPos, updatedAt: new Date() })
+          .where(eq(link.id, previousLink.id));
+      });
     } else if (direction === "down") {
       if (currentIndex === userLinks.length - 1) {
         // Sudah di posisi paling bawah
@@ -351,15 +353,17 @@ export async function reorderLinkAction(
       const nextPos =
         nextLink.position === targetLink.position ? targetLink.position - 1 : targetLink.position;
 
-      await db
-        .update(link)
-        .set({ position: targetPos, updatedAt: new Date() })
-        .where(eq(link.id, targetLink.id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(link)
+          .set({ position: targetPos, updatedAt: new Date() })
+          .where(eq(link.id, targetLink.id));
 
-      await db
-        .update(link)
-        .set({ position: nextPos, updatedAt: new Date() })
-        .where(eq(link.id, nextLink.id));
+        await tx
+          .update(link)
+          .set({ position: nextPos, updatedAt: new Date() })
+          .where(eq(link.id, nextLink.id));
+      });
     }
 
     revalidatePath("/dashboard");

@@ -208,14 +208,13 @@ export default async function PublicProfilePage(props: PublicProfilePageProps) {
                       </p>
                     )}
                     <div className="mt-2 flex justify-end">
-                      <Link href={`/checkout/${prod.id}`} className="w-full sm:w-auto">
-                        <Button
-                          size="sm"
-                          className="w-full sm:w-auto text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Beli
-                        </Button>
-                      </Link>
+                      <Button
+                        asChild
+                        size="sm"
+                        className="w-full sm:w-auto text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Link href={`/checkout/${prod.id}`}>Beli</Link>
+                      </Button>
                     </div>
                   </div>
                 </Card>

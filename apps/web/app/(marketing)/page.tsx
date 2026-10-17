@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge, Button } from "@openlynk/ui";
 
 export default function HomePage() {
@@ -17,12 +18,12 @@ export default function HomePage() {
           seluruh Indonesia.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <a href="/register">
-            <Button>Mulai Sekarang</Button>
-          </a>
-          <a href="/login">
-            <Button variant="outline">Masuk ke Akun</Button>
-          </a>
+          <Button asChild>
+            <Link href="/register">Mulai Sekarang</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/login">Masuk ke Akun</Link>
+          </Button>
         </div>
       </div>
     </main>

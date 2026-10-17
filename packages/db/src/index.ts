@@ -4,7 +4,7 @@ import * as schema from "../schema";
 
 export * from "../schema";
 export { schema };
-export { and, asc, desc, eq, sql } from "drizzle-orm";
+export { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 
 export interface DbClientOptions {
   prepare?: boolean;

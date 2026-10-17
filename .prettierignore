@@ -7,3 +7,8 @@ pnpm-lock.yaml
 LICENSE
 .drizzle/
 packages/db/drizzle/
+.agents/
+.turbo/
+apps/web/.turbo/
+apps/web/next-env.d.ts
+*.tsbuildinfo

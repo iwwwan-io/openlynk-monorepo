@@ -233,6 +233,8 @@ export function LinkManager({ initialLinks }: LinkManagerProps) {
                       className="flex-1 space-y-3 sm:space-y-0 sm:flex sm:gap-3"
                     >
                       <Input
+                        id={`edit-title-${item.id}`}
+                        aria-label="Judul tautan"
                         type="text"
                         required
                         maxLength={100}
@@ -242,6 +244,8 @@ export function LinkManager({ initialLinks }: LinkManagerProps) {
                         placeholder="Judul tautan"
                       />
                       <Input
+                        id={`edit-url-${item.id}`}
+                        aria-label="URL tautan"
                         type="url"
                         required
                         value={editUrl}
@@ -303,7 +307,7 @@ export function LinkManager({ initialLinks }: LinkManagerProps) {
                             disabled={isPending || index === 0}
                             onClick={() => handleReorder(item.id, "up")}
                             aria-label="Pindahkan ke atas"
-                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
                           >
                             ▲
                           </button>
@@ -312,7 +316,7 @@ export function LinkManager({ initialLinks }: LinkManagerProps) {
                             disabled={isPending || index === initialLinks.length - 1}
                             onClick={() => handleReorder(item.id, "down")}
                             aria-label="Pindahkan ke bawah"
-                            className="rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
+                            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded p-1 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition"
                           >
                             ▼
                           </button>

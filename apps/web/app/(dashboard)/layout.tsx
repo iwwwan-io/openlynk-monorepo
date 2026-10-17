@@ -39,16 +39,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           <div className="flex items-center gap-3">
             {userProfile?.username && (
-              <Link href={`/${userProfile.username}`} target="_blank" rel="noopener noreferrer">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs"
-                >
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs"
+              >
+                <Link href={`/${userProfile.username}`} target="_blank" rel="noopener noreferrer">
                   <span>Lihat Halaman Publik</span>
                   <span>↗</span>
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
 
             <form action={logoutAction}>

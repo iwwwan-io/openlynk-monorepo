@@ -4,7 +4,7 @@ import {
   parseMidtransAmount,
   verifyMidtransSignature,
 } from "@/lib/midtrans";
-import { eq, getDb, order, type OrderStatus } from "@openlynk/db";
+import { and, eq, getDb, ne, order, type OrderStatus } from "@openlynk/db";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -104,7 +104,14 @@ export async function POST(req: Request) {
     updatePayload.paidAt = new Date();
   }
 
-  await db.update(order).set(updatePayload).where(eq(order.id, existingOrder.id));
+  await db
+    .update(order)
+    .set(updatePayload)
+    .where(
+      newStatus !== "paid"
+        ? and(eq(order.id, existingOrder.id), ne(order.status, "paid"))
+        : eq(order.id, existingOrder.id)
+    );
 
   return NextResponse.json(
     { status: "ok", message: `Status pesanan berhasil diperbarui ke ${newStatus}` },

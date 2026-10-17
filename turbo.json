@@ -3,6 +3,8 @@
   "ui": "stream",
   "globalEnv": [
     "DATABASE_URL",
+    "DATABASE_URL_DIRECT",
+    "NODE_ENV",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "NEXT_PUBLIC_APP_URL",
@@ -19,6 +21,8 @@
       "outputs": [],
       "env": [
         "DATABASE_URL",
+        "DATABASE_URL_DIRECT",
+        "NODE_ENV",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
         "NEXT_PUBLIC_APP_URL",
@@ -35,6 +39,8 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "env": [
         "DATABASE_URL",
+        "DATABASE_URL_DIRECT",
+        "NODE_ENV",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
         "NEXT_PUBLIC_APP_URL",
