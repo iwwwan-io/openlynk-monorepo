@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import * as schema from "../schema";
 
@@ -26,6 +27,29 @@ export function createDbClient(connectionString: string, options: DbClientOption
 }
 
 export type DbClient = ReturnType<typeof createDbClient>;
+
+export async function migrateDatabase(
+  connectionString: string,
+  migrationsFolder: string
+): Promise<void> {
+  const client = postgres(connectionString, {
+    max: 1,
+    prepare: false,
+    connect_timeout: 10,
+  });
+  const lockName = "openlynk:drizzle:migrations";
+
+  try {
+    await client`SELECT pg_advisory_lock(hashtext(${lockName}))`;
+    await migrate(drizzle(client), { migrationsFolder });
+  } finally {
+    try {
+      await client`SELECT pg_advisory_unlock(hashtext(${lockName}))`;
+    } finally {
+      await client.end();
+    }
+  }
+}
 
 export function getDb(): DbClient {
   const connectionString =
