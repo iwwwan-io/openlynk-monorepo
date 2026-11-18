@@ -129,6 +129,7 @@ export async function createOrderAction(
         Authorization: authHeader,
       },
       body: JSON.stringify(snapPayload),
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!midtransResponse.ok) {
