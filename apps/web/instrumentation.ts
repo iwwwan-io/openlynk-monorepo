@@ -1,11 +1,9 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import { migrateDatabase } from "@openlynk/db";
 import { resolve } from "node:path";
 
 /**
  * Apply committed Drizzle migrations before the Node.js server accepts traffic.
- * The PostgreSQL advisory lock prevents concurrent instances from racing migrations.
+ * The database package serializes concurrent migration attempts with a PostgreSQL advisory lock.
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") {
@@ -17,25 +15,9 @@ export async function register() {
     throw new Error("DATABASE_URL is required to start Openlynk.");
   }
 
-  const client = postgres(connectionString, {
-    max: 1,
-    prepare: false,
-    connect_timeout: 10,
-  });
-
-  const lockName = "openlynk:drizzle:migrations";
-
-  try {
-    await client`SELECT pg_advisory_lock(hashtext(${lockName}))`;
-    await migrate(drizzle(client), {
-      migrationsFolder: resolve(process.cwd(), "../../packages/db/drizzle"),
-    });
-    console.info("[Openlynk] Database migrations are up to date.");
-  } finally {
-    try {
-      await client`SELECT pg_advisory_unlock(hashtext(${lockName}))`;
-    } finally {
-      await client.end();
-    }
-  }
+  await migrateDatabase(
+    connectionString,
+    resolve(process.cwd(), "../../packages/db/drizzle")
+  );
+  console.info("[Openlynk] Database migrations are up to date.");
 }
