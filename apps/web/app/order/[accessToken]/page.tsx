@@ -1,7 +1,7 @@
 import { fetchMidtransOrderStatus } from "@/lib/midtrans";
 import { OrderStatusRefresh } from "./order-status-refresh";
 import { formatPriceIdr } from "@/lib/product-validation";
-import { eq, getDb, order, product, profile } from "@openlynk/db";
+import { and, eq, getDb, order, product, profile } from "@openlynk/db";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@openlynk/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -65,21 +65,26 @@ export default async function OrderPage(props: OrderPageProps) {
     const remote = await fetchMidtransOrderStatus(orderData.midtransOrderId);
     if (remote && remote.status && remote.status !== "pending") {
       const isValidAmount =
-        remote.grossAmount === null || remote.grossAmount === orderData.amountIdr;
+        remote.grossAmount !== null && remote.grossAmount === orderData.amountIdr;
       if (isValidAmount) {
         const newStatus = remote.status;
         const newPaidAt = newStatus === "paid" ? new Date() : null;
-        await db
+        const [updatedOrder] = await db
           .update(order)
           .set({
             status: newStatus,
             paidAt: newPaidAt,
             updatedAt: new Date(),
           })
-          .where(eq(order.id, orderData.id));
+          .where(and(eq(order.id, orderData.id), eq(order.status, "pending")))
+          .returning({ status: order.status, paidAt: order.paidAt });
 
-        orderData.status = newStatus;
-        orderData.paidAt = newPaidAt;
+        // Hanya gunakan respons Midtrans jika order masih pending saat update atomik.
+        // Webhook yang lebih dahulu mengubah status tidak boleh ditimpa respons lama.
+        if (updatedOrder) {
+          orderData.status = updatedOrder.status;
+          orderData.paidAt = updatedOrder.paidAt;
+        }
       }
     }
   }
