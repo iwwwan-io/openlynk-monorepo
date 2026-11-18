@@ -123,8 +123,11 @@ export function parseMidtransAmount(grossAmount: unknown): number | null {
     if (!trimmed) {
       return null;
     }
-    const parsed = parseFloat(trimmed);
-    if (isNaN(parsed) || !isFinite(parsed) || parsed < 0) {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(trimmed)) {
+      return null;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed) || parsed < 0) {
       return null;
     }
     return Math.round(parsed);
@@ -235,6 +238,7 @@ export async function fetchMidtransOrderStatus(orderId: string): Promise<{
         Authorization: authHeader,
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (!response.ok) {
