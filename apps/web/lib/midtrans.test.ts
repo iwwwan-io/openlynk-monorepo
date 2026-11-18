@@ -163,6 +163,8 @@ describe("parseMidtransAmount", () => {
 
   it("rejects invalid, negative, or non-numeric values", () => {
     expect(parseMidtransAmount("abc")).toBeNull();
+    expect(parseMidtransAmount("25000.00oops")).toBeNull();
+    expect(parseMidtransAmount("1e3")).toBeNull();
     expect(parseMidtransAmount("")).toBeNull();
     expect(parseMidtransAmount(-5000)).toBeNull();
     expect(parseMidtransAmount(null)).toBeNull();
